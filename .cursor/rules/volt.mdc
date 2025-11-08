@@ -1,0 +1,250 @@
+---
+alwaysApply: true
+globs: *.blade.php
+---
+
+# Volt統合ルール
+
+## 1. コンポーネント設計
+- Functionalスタイル実装必須
+- make:voltコマンドで--functionalオプション使用
+- クラスベースコンポーネント禁止
+- 単一責任の原則遵守
+- コンポーネントの再利用性重視
+- 共通コンポーネント配置: resources/views/components
+
+## 2. ルーティング設計
+### 基本方針
+- フルページコンポーネントはVolt::route()を使用
+- 名前付きルート必須
+- ルーティングはweb.phpに集約
+- ミドルウェアはルート定義時に指定
+
+### 命名規約
+- リソース系（CRUD）: 複数形（memos, posts, users）
+- 機能系: 単数形または適切な形式（dashboard, profile, settings）
+
+### コンポーネント配置
+- Voltコンポーネント: resources/views/livewire/
+- ページコンポーネント: リソース名（複数形）/アクション名
+- 例: memos/index, memos/create, memos/edit, memos/show
+
+対応するファイル構成:
+```
+resources/views/livewire/
+└── memos/
+    ├── index.blade.php
+    ├── create.blade.php
+    ├── edit.blade.php
+    └── show.blade.php
+```
+
+## 3. 必須構文
+
+### Voltヘルパー関数のインポート
+全てのVolt Functionalコンポーネントで、使用する機能に応じて以下をインポート:
+
+```php
+use function Livewire\Volt\{
+    state,      // 状態管理
+    mount,      // 初期化処理
+    computed,   // 算出プロパティ
+    with,       // ビューデータ渡し
+    on,         // イベントリスナー
+    updated,    // 更新フック
+    boot,       // ブート処理
+    rules,      // バリデーションルール
+    uses,       // トレイト使用
+};
+```
+
+## 4. 状態管理
+### 基本方針
+- #[Reactive]アトリビュートによる状態管理
+- コンポーネント間通信: イベント使用、ディスパッチ活用
+- 複雑なロジックはActionクラスに分離
+
+### 状態管理選択基準
+#### withの使用
+- 読み取り専用データ表示
+- シンプルなページネーション
+- 状態変更不要
+- パフォーマンス重視
+
+#### stateの使用
+- フォーム入力あり
+- 双方向バインディング必要
+- データ更新あり
+- 複雑な状態管理
+
+## 5. フォーム実装
+### バリデーション
+- Voltバリデーション機能使用
+- Form Requests実装
+- リアルタイム検証
+- 日本語エラーメッセージ
+- インライン検証
+
+### セキュリティ
+- CSRFトークン自動付与
+- 二重送信防止
+- XSS対策
+- 入力値サニタイズ
+- 認可制御
+
+### UX対応
+- ローディング表示
+- エラー表示最適化
+- アクセシビリティ確保
+- フィードバック表示
+
+## 6. UI/UX
+- TailwindCSSによるスタイリング
+- レスポンシブデザイン必須
+- アクセシビリティガイドライン遵守
+- インタラクティブUI実装
+- Voltのリアクティブ機能活用
+- 適切なローディング状態管理
+
+## 7. パフォーマンス
+- コンポーネントの最適な粒度設計
+- 不要な再レンダリング防止
+- computedプロパティ活用
+- キャッシュ戦略実装
+- N+1問題回避
+- アセット最適化
+
+## 8. テスト
+- コンポーネント単体テスト
+- インタラクションテスト
+- E2Eテスト実装
+- テストカバレッジ確保
+
+## 9. Volt Functional実装パターン
+
+### 基本的なコンポーネント構造
+
+```php
+<?php
+use function Livewire\Volt\{state, mount, computed};
+
+// 状態定義
+state(['propertyName' => 'defaultValue']);
+
+// 初期化処理（必要に応じて）
+mount(fn() => /* 初期化ロジック */);
+
+// 算出プロパティ（必要に応じて）
+$computed = computed(fn() => /* 算出ロジック */);
+
+// バリデーションルールを定義
+rules([
+    'field' => 'required|max:255',
+]);
+
+// メソッド定義
+$methodName = function () {
+    // バリデーション
+    $this->validate();
+    
+    // 処理ロジック
+    
+    // リダイレクト（必要に応じて）
+    return $this->redirect(route('route.name'), navigate: true);
+};
+?>
+
+<div>
+    <!-- Bladeテンプレート -->
+</div>
+```
+
+### 重要な実装ポイント
+
+#### モデルバインディング
+ルートパラメータ名とモデル名を一致させることで自動的にモデルを取得:
+```
+// routes/web.php
+Volt::route('/memos/{memo}', 'memos.show');
+
+// コンポーネント内
+mount(function (Memo $memo) {
+    $this->memo = $memo;
+});
+```
+
+#### 認可制御
+アクション実行前に必ず認可チェック:
+```
+$this->authorize('update', $this->memo);
+```
+
+#### リダイレクト
+navigate: true でSPA風の画面遷移:
+```
+return $this->redirect(route('memos.show', $memo), navigate: true);
+```
+
+## 10. よくある間違いと修正
+
+### NG: クラスベースの記述
+```
+class MemoIndex extends Component
+{
+    public $memos;
+}
+```
+
+### OK: Volt Functional
+```
+<?php
+use function Livewire\Volt\{state};
+use App\Models\Memo;
+
+state(['memos' => fn() => Memo::all()]);
+?>
+```
+
+### NG: $thisの誤用
+```
+$save = function () {
+    $memos = Memo::all();  // 状態として保持されない
+};
+```
+
+### OK: 正しい状態管理
+```
+$save = function () {
+    $this->memos = Memo::all();  // 状態を更新
+};
+```
+
+### NG: use function文の不足
+```
+<?php
+state(['title' => '']);  // エラー: 未定義関数
+?>
+```
+
+### OK: 正しいインポート
+```
+<?php
+use function Livewire\Volt\{state};
+
+state(['title' => '']);
+?>
+```
+
+### NG: モデルバインディング未使用
+```
+mount(function ($id) {
+    $this->memo = Memo::findOrFail($id);
+});
+```
+
+### OK: モデルバインディング使用
+```
+mount(function (Memo $memo) {
+    $this->memo = $memo;
+});
+```
