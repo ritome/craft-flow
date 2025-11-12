@@ -15,11 +15,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // 開発環境用のテストユーザーを作成
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Test User2',
+            'email' => 'test2@example.com',
+        ]);
+        
+        // --- データの呼び出し順序を保証 ---
+        // 外部キー制約エラーを避けるため、参照されるテーブル(プログラム)を先に実行します。
+        $this->call([
+            ExperienceProgramSeeder::class, // 1. プログラムデータを先に作成
+            ReservationSeeder::class,       // 2. その後、予約データを安全に作成
         ]);
     }
 }
