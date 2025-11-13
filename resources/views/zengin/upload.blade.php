@@ -97,7 +97,7 @@
             <!-- アップロードフォーム -->
             <div class="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
                 <form action="{{ route('zengin.convert') }}" method="POST" enctype="multipart/form-data"
-                    class="space-y-6">
+                    class="space-y-6" id="uploadForm">
                     @csrf
 
                     <div>
@@ -112,11 +112,23 @@
                         <p class="mt-2 text-xs text-gray-500">
                             対応形式: .xlsx, .xls, .csv（最大 10MB）
                         </p>
+                        <!-- ファイル情報表示エリア -->
+                        <div id="fileInfo" class="mt-2 hidden">
+                            <div class="flex items-center text-sm">
+                                <svg class="h-4 w-4 mr-1 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span id="fileName" class="text-gray-700"></span>
+                                <span id="fileSize" class="ml-2 text-gray-500"></span>
+                            </div>
+                        </div>
                     </div>
 
                     <div>
-                        <button type="submit"
-                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button type="submit" id="submitButton"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed">
                             変換する
                         </button>
                     </div>
@@ -149,6 +161,84 @@
             </div>
         </div>
     </div>
+
+    <!-- JavaScript for file validation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('excel_file');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const submitButton = document.getElementById('submitButton');
+            const uploadForm = document.getElementById('uploadForm');
+
+            // 許可される拡張子
+            const allowedExtensions = ['xlsx', 'xls', 'csv'];
+            const maxFileSize = 10 * 1024 * 1024; // 10MB
+
+            // ファイルサイズを読みやすい形式に変換
+            function formatFileSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+
+            // ファイル選択時のバリデーション
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+
+                if (!file) {
+                    fileInfo.classList.add('hidden');
+                    submitButton.disabled = false;
+                    return;
+                }
+
+                // ファイル名から拡張子を取得
+                const fileExtension = file.name.split('.').pop().toLowerCase();
+
+                // 拡張子チェック
+                if (!allowedExtensions.includes(fileExtension)) {
+                    alert('❌ エラー: Excelファイル（.xlsx、.xls、.csv）のみアップロード可能です。\n\n選択されたファイル: ' + file.name);
+                    fileInput.value = ''; // ファイル選択をクリア
+                    fileInfo.classList.add('hidden');
+                    submitButton.disabled = true;
+                    return;
+                }
+
+                // ファイルサイズチェック
+                if (file.size > maxFileSize) {
+                    alert('❌ エラー: ファイルサイズが大きすぎます。\n\n最大サイズ: 10MB\n選択されたファイル: ' + formatFileSize(file.size));
+                    fileInput.value = ''; // ファイル選択をクリア
+                    fileInfo.classList.add('hidden');
+                    submitButton.disabled = true;
+                    return;
+                }
+
+                // 正常なファイル - 情報を表示
+                fileName.textContent = file.name;
+                fileSize.textContent = '(' + formatFileSize(file.size) + ')';
+                fileInfo.classList.remove('hidden');
+                submitButton.disabled = false;
+            });
+
+            // フォーム送信時の最終確認
+            uploadForm.addEventListener('submit', function(e) {
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    e.preventDefault();
+                    alert('⚠️ ファイルを選択してください。');
+                    return false;
+                }
+
+                // ダブルクリック防止
+                submitButton.disabled = true;
+                submitButton.textContent = '変換中...';
+
+                return true;
+            });
+        });
+    </script>
 </body>
 
 </html>
