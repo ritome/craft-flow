@@ -5,6 +5,17 @@ use App\Models\Reservation;
 // ルートモデルバインディング
 state(['reservations' => fn(Reservation $reservations) => $reservations]);
 
+// 編集ページにリダイレクト
+$edit = function () {
+    // 編集ページにリダイレクト
+    return redirect()->route('reservations.edit', $this->reservations);
+};
+
+$destroy = function () {
+    $this->reservations->delete();
+    return redirect()->route('reservations.index');
+};
+
 ?>
 
 <div>
@@ -17,5 +28,6 @@ state(['reservations' => fn(Reservation $reservations) => $reservations]);
     <p><strong>ステータス:</strong> {{ $reservations->status }}</p>
     <p><strong>備考:</strong> {{ $reservations->notes }}</p>
 
-
+    <button wire:click="edit">編集する</button>
+    <button wire:click="destroy" wire:confirm="本当に削除しますか？">削除する</button>
 </div>
