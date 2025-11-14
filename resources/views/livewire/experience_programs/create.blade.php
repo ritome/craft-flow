@@ -1,12 +1,21 @@
 <?php
 
-use function Livewire\Volt\{state};
+use function Livewire\Volt\{state, rules};
 use App\Models\ExperienceProgram;
 //
 state(['name', 'description', 'duration', 'capacity', 'price']);
 
+// バリデーションルールを定義
+rules([
+    'name' => 'required|string|max:255',
+    'description' => 'required|string|max:2000',
+    'duration' => 'required|numeric|min:0',
+    'capacity' => 'required|integer|min:1',
+    'price' => 'required|numeric|min:0',
+]);
 // メモを保存する関数
 $store = function () {
+    $this->validate();
     // フォームからの入力値をデータベースへ保存
     ExperienceProgram::create($this->all());
     // 一覧ページにリダイレクト
@@ -19,33 +28,43 @@ $store = function () {
     <h1>新規登録</h1>
     <form wire:submit="store">
         <p>
-            <label for="name">プログラム名</label><br>
+            @error('name')
+                <span class="error">({{ $message }})</span>
+            @enderror
+            <br>
             <input type="text" wire:model="name" id="name">
         </p>
-    </form>
-    <form wire:submit="store">
+
         <p>
-            <label for="description">説明</label><br>
+            @error('description')
+                <span class="error">({{ $message }})</span>
+            @enderror
+            <br>
             <textarea wire:model="description" id="description"></textarea>
         </p>
-    </form>
-    <form wire:submit="store">
+
         <p>
-            <label for="duration">所要時間</label><br>
+            @error('duration')
+                <span class="error">({{ $message }})</span>
+            @enderror
+            <br>
             <input type="text" wire:model="duration" id="duration">
         </p>
-    </form>
-    <form wire:submit="store">
         <p>
-            <label for="capacity">最大受入人数</label><br>
+            @error('capacity')
+                <span class="error">({{ $message }})</span>
+            @enderror
+            <br>
             <input type="text" wire:model="capacity" id="capacity">
         </p>
-    </form>
-    <form wire:submit="store">
         <p>
-            <label for="price">料金</label><br>
+            @error('price')
+                <span class="error">({{ $message }})</span>
+            @enderror
+            <br>
             <input type="text" wire:model="price" id="price">
         </p>
+
+        <button type="submit">登録</button>
     </form>
-    <button type="submit">登録</button>
 </div>
