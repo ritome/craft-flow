@@ -5,6 +5,10 @@ use App\Models\ExperienceProgram;
 
 // ルートモデルバインディング
 state(['experience_programs' => fn() => ExperienceProgram::all()]);
+
+$create = function () {
+    return redirect()->route('experience_programs.create');
+};
 ?>
 
 <div>
@@ -18,4 +22,6 @@ state(['experience_programs' => fn() => ExperienceProgram::all()]);
             </li>
         @endforeach
     </ul>
+
+    <button wire:click="create">プログラム登録する</button>
 </div>

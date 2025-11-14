@@ -10,6 +10,12 @@ Route::get('/', function () {
 Volt::route('/experience_programs', 'experience_programs.index')->name('experience_programs.index');
 Volt::route('/reservations', 'reservations.index')->name('reservations.index');
 
+ // 具体的なパスを先に定義
+ // 新規作成ページ
+ Volt::route('/experience_programs/create', 'experience_programs.create')->name('experience_programs.create');
+ Volt::route('/reservations/create', 'reservations.create')->name('reservations.create');
+ // 動的パラメータを含むルートは最後に定義
+
 // 詳細ページ
 Volt::route('/experience_programs/{experience_programs}', 'experience_programs.show')->name('experience_programs.show');
 

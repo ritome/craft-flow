@@ -4,6 +4,10 @@ use function Livewire\Volt\{state};
 use App\Models\Reservation;
 
 state(['reservations' => fn() => Reservation::all()]);
+
+$create = function () {
+    return redirect()->route('reservations.create');
+};
 ?>
 
 <div>
@@ -17,4 +21,6 @@ state(['reservations' => fn() => Reservation::all()]);
             </li>
         @endforeach
     </ul>
+
+    <button wire:click="create">予約登録する</button>
 </div>
