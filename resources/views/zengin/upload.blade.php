@@ -96,7 +96,7 @@
 
             <!-- アップロードフォーム -->
             <div class="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                <form action="{{ route('zengin.convert') }}" method="POST" enctype="multipart/form-data"
+                <form action="{{ route('zengin.preview') }}" method="POST" enctype="multipart/form-data"
                     class="space-y-6" id="uploadForm">
                     @csrf
 
@@ -129,7 +129,7 @@
                     <div>
                         <button type="submit" id="submitButton"
                             class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            変換する
+                            データを確認する
                         </button>
                     </div>
                 </form>
@@ -233,7 +233,7 @@
 
                 // ダブルクリック防止
                 submitButton.disabled = true;
-                submitButton.textContent = '変換中...';
+                submitButton.textContent = '読み込み中...';
 
                 return true;
             });

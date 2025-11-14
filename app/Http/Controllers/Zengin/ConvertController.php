@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Zengin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UploadZenginRequest;
 use App\Imports\ZenginImport;
-use App\Services\Zengin\ZenginConverter;
+use App\Models\ZenginLog;
+use App\Services\ZenginExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * 全銀フォーマット変換コントローラ
@@ -27,24 +30,17 @@ class ConvertController extends Controller
      */
     public function showUploadForm(): View
     {
+        // 全銀フォーマット関連のセッションデータをクリア
+        session()->forget(['zengin_data', 'zengin_filename']);
+
         return view('zengin.upload');
     }
 
     /**
-     * Excel ファイルを受け取って変換処理を実行
+     * Excel ファイルを受け取ってデータをプレビュー
      */
-    public function convert(Request $request, ZenginConverter $converter): View|RedirectResponse
+    public function preview(UploadZenginRequest $request): View|RedirectResponse
     {
-        // バリデーション: ファイルが必須で、拡張子と容量をチェック
-        $validated = $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // 10MB以下
-        ], [
-            'excel_file.required' => 'ファイルを選択してください。',
-            'excel_file.file' => 'ファイルをアップロードしてください。',
-            'excel_file.mimes' => 'Excel ファイル（xlsx, xls, csv）をアップロードしてください。',
-            'excel_file.max' => 'ファイルサイズは10MB以下にしてください。',
-        ]);
-
         // アップロードされたファイルを取得
         $file = $request->file('excel_file');
 
@@ -64,13 +60,6 @@ class ConvertController extends Controller
             // 1行目をヘッダー（列名）として取得
             $headers = array_shift($allRows);
 
-            // デバッグ: 読み込んだデータを確認（一時的）
-            \Log::info('Total rows: '.count($allRows));
-            \Log::info('Headers: '.json_encode($headers, JSON_UNESCAPED_UNICODE));
-            if (! empty($allRows)) {
-                \Log::info('First data row: '.json_encode($allRows[0], JSON_UNESCAPED_UNICODE));
-            }
-
             // 列名とデータを組み合わせて連想配列に変換
             $rows = [];
             foreach ($allRows as $row) {
@@ -80,8 +69,6 @@ class ConvertController extends Controller
                 }
                 $rows[] = $associativeRow;
             }
-
-            \Log::info('First associative row: '.json_encode($rows[0] ?? [], JSON_UNESCAPED_UNICODE));
         } catch (\Exception $e) {
             \Log::error('Excel import error: '.$e->getMessage());
 
@@ -90,64 +77,143 @@ class ConvertController extends Controller
             ])->withInput();
         }
 
-        // データを整形（新しい列構成に対応）
-        $formattedData = [];
-        foreach ($rows as $row) {
+        // 必須項目を抽出
+        $extractedData = [];
+        $errorRows = []; // エラー行を記録
+
+        foreach ($rows as $index => $row) {
             // 必須項目のチェック（空の行をスキップ）
             if (empty($row['金融機関名']) && empty($row['口座番号'])) {
                 continue;
             }
 
-            $formattedData[] = [
-                // 金融機関情報
+            $rowData = [
+                'row_number' => $index + 2, // Excel上の行番号（ヘッダー分+1）
                 'bank_code' => $row['金融機関コード'] ?? '',
                 'bank_name' => $row['金融機関名'] ?? '',
                 'branch_code' => $row['支店コード'] ?? '',
                 'branch_name' => $row['支店名'] ?? '',
-
-                // 口座情報
                 'account_type' => $row['預金種目'] ?? '',
                 'account_number' => $row['口座番号'] ?? '',
                 'account_holder' => $row['口座名義カナ'] ?? $row['口座名義（カナ）'] ?? '',
-
-                // 金額
                 'amount' => $row['振込金額'] ?? '0',
-
-                // その他（参考情報）
                 'customer_name' => $row['事業者名'] ?? '',
-                'transfer_date' => $row['振込予定日'] ?? '',
             ];
-        }
 
-        // デバッグ: 整形後のデータを確認（一時的）
-        \Log::info('Formatted data count: '.count($formattedData));
-        if (! empty($formattedData)) {
-            \Log::info('First formatted data: '.json_encode($formattedData[0], JSON_UNESCAPED_UNICODE));
+            // 必須項目のバリデーション
+            $errors = [];
+            if (empty($rowData['bank_code'])) {
+                $errors[] = '金融機関コードが未入力';
+            }
+            if (empty($rowData['bank_name'])) {
+                $errors[] = '金融機関名が未入力';
+            }
+            if (empty($rowData['branch_code'])) {
+                $errors[] = '支店コードが未入力';
+            }
+            if (empty($rowData['branch_name'])) {
+                $errors[] = '支店名が未入力';
+            }
+            if (empty($rowData['account_number'])) {
+                $errors[] = '口座番号が未入力';
+            }
+            if (empty($rowData['account_holder'])) {
+                $errors[] = '口座名義が未入力';
+            }
+
+            $rowData['errors'] = $errors;
+            $rowData['has_error'] = ! empty($errors);
+
+            if (! empty($errors)) {
+                $errorRows[] = $rowData;
+            }
+
+            $extractedData[] = $rowData;
         }
 
         // データが空の場合はエラー
-        if (empty($formattedData)) {
+        if (empty($extractedData)) {
             return back()->withErrors([
                 'excel_file' => 'Excel ファイルにデータが見つかりませんでした。ヘッダー行と最低1行のデータが必要です。',
             ]);
         }
 
-        try {
-            // サービスクラスを使って固定長テキストに変換
-            $filename = $converter->convertToFixedLength($formattedData);
+        // データをセッションに保存（変換時に使用）
+        session([
+            'zengin_data' => $extractedData,
+            'zengin_filename' => $file->getClientOriginalName(),
+        ]);
 
-            return view('zengin.upload', [
-                'message' => '変換に成功しました！以下のリンクからダウンロードできます。',
-                'filename' => $file->getClientOriginalName(),
-                'downloadFilename' => $filename,
-                'recordCount' => count($formattedData),
+        // プレビュー画面を表示
+        return view('zengin.preview', [
+            'data' => $extractedData,
+            'totalCount' => count($extractedData),
+            'errorCount' => count($errorRows),
+            'originalFilename' => $file->getClientOriginalName(),
+        ]);
+    }
+
+    /**
+     * プレビュー後、変換処理を実行してダウンロード
+     */
+    public function convert(): StreamedResponse|RedirectResponse
+    {
+        // セッションからデータを取得
+        $extractedData = session('zengin_data');
+        $originalFilename = session('zengin_filename');
+
+        if (empty($extractedData)) {
+            return redirect()->route('zengin.upload')->withErrors([
+                'excel_file' => 'セッションが切れました。もう一度ファイルをアップロードしてください。',
+            ]);
+        }
+
+        // エラーがある行を除外
+        $validData = array_filter($extractedData, function ($row) {
+            return ! $row['has_error'];
+        });
+
+        if (empty($validData)) {
+            return back()->withErrors([
+                'conversion' => 'すべての行にエラーがあります。データを修正してください。',
+            ]);
+        }
+
+        try {
+            $exporter = new ZenginExporter;
+
+            // 全銀フォーマットに変換（Shift-JIS、CRLF、120バイト）
+            $content = $exporter->export($validData);
+
+            // ファイル名生成
+            $filename = str_replace('{Ymd_His}', date('Ymd_His'), config('zengin.filename_template'));
+
+            // 統計情報を取得
+            $stats = $exporter->getStats();
+
+            // ログに記録
+            ZenginLog::create([
+                'filename' => $filename,
+                'total_count' => $stats['total_count'],
+                'total_amount' => $stats['total_amount'],
+            ]);
+
+            // セッションをクリア
+            session()->forget(['zengin_data', 'zengin_filename']);
+
+            // Shift-JISでダウンロード
+            return response()->streamDownload(function () use ($content) {
+                echo $content;
+            }, $filename, [
+                'Content-Type' => 'text/plain; charset=shift_jis',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ]);
         } catch (\Exception $e) {
-            \Log::error('Conversion error: '.$e->getMessage());
+            \Log::error('Zengin conversion error: '.$e->getMessage());
 
             return back()->withErrors([
-                'excel_file' => '変換処理中にエラーが発生しました。データの形式を確認してください。',
-            ])->withInput();
+                'conversion' => '変換処理中にエラーが発生しました: '.$e->getMessage(),
+            ]);
         }
     }
 
