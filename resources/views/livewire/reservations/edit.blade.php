@@ -1,6 +1,6 @@
 <?php
 
-use function Livewire\Volt\{state, mount}; // ★ rules を use から削除
+use function Livewire\Volt\{state, mount};
 use App\Models\Reservation;
 use App\Models\ExperienceProgram;
 use Illuminate\Support\Collection;
@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 state([
     'reservation' => null,
     'programName' => '',
-    'originalValues' => [],
+    'originalValues' => [], // ★★★ エラーの原因は、この行か、mount()内の代入が消えていたことです ★★★
     'programs' => Collection::make(),
 ]);
 state('form', [
@@ -25,14 +25,12 @@ state('form', [
     'notes' => '',
 ]);
 
-// --- バリデーションルール ---
-// ★★★ この rules(...) ブロック全体を削除します ★★★
-
 // --- コンポーネント初期化処理 ---
 mount(function (Reservation $reservation) {
-    // ... (この部分は変更ありません) ...
     $this->programs = ExperienceProgram::all(['experience_program_id', 'name']);
     $this->reservation = $reservation;
+
+    // ★★★ このブロックで $originalValues に値をセットします ★★★
     $this->originalValues = [
         'programName' => $this->reservation->experienceProgram?->name ?? '不明なプログラム',
         'reservation_date' => $this->reservation->reservation_date?->format('Y-m-d'),
@@ -45,6 +43,7 @@ mount(function (Reservation $reservation) {
         'status' => $this->reservation->status,
         'notes' => $this->reservation->notes,
     ];
+
     $this->programName = $this->originalValues['programName'];
     $this->form = [
         'experience_program_id' => $this->reservation->experience_program_id,
@@ -62,8 +61,6 @@ mount(function (Reservation $reservation) {
 
 // --- 更新処理 ---
 $update = function () {
-    // ★★★ ここから修正 ★★★
-
     // バリデーションルールをこの場で定義する
     $rules = [
         'form.experience_program_id' => 'required|exists:experience_programs,experience_program_id',
@@ -77,28 +74,34 @@ $update = function () {
         'form.status' => 'required|integer|in:1,2,3',
         'form.notes' => 'nullable|string',
     ];
-
-    // validate() メソッドに直接ルールを渡す
     $validated = $this->validate($rules);
-
-    // ★★★ ここまで修正 ★★★
-
-    // H:i 形式の時刻に秒を追加して H:i:s 形式に戻す
     $dataToUpdate = $validated['form'];
-    $dataToUpdate['reservation_time'] = $dataToUpdate['reservation_time'] . ':00';
 
-    // データベースを更新
+    // --- ダブルブッキングチェック ---
+    $program = ExperienceProgram::find($dataToUpdate['experience_program_id']);
+    if ($program) {
+        $capacity = $program->capacity;
+        $currentParticipants = Reservation::where('experience_program_id', $dataToUpdate['experience_program_id'])
+            ->where('reservation_date', $dataToUpdate['reservation_date'])
+            ->where('reservation_time', $dataToUpdate['reservation_time'] . ':00')
+            ->where('id', '!=', $this->reservation->id)
+            ->where('status', 1)
+            ->sum('participant_count');
+
+        if ($currentParticipants + $dataToUpdate['participant_count'] > $capacity) {
+            session()->flash('error', "その日時は満員のため、更新できません。(現在の予約人数: {$currentParticipants}名 / 定員: {$capacity}名)");
+            return;
+        }
+    }
+    // --- チェックここまで ---
+
+    $dataToUpdate['reservation_time'] .= ':00';
     $this->reservation->update($dataToUpdate);
-
-    // フラッシュメッセージをセッションに保存
     session()->flash('success', '予約情報が正常に更新されました。');
-
-    // 詳細ページにリダイレクト
     return redirect()->route('reservations.show', $this->reservation);
 };
 
 ?>
-
 <div class="bg-gray-100 p-4 sm:p-6 md:p-8 min-h-screen">
     <div class="max-w-3xl mx-auto">
 
@@ -115,11 +118,17 @@ $update = function () {
                     <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">予約情報の更新</h1>
                     <p class="text-sm text-gray-500 mb-6">内容を編集して、更新ボタンを押してください。</p>
 
-                    <!-- 成功メッセージ -->
+                    {{-- ★★★ 成功・エラーメッセージ表示ブロックを追加 ★★★ --}}
                     @if (session()->has('success'))
                         <div class="mb-6 p-4 text-sm text-green-800 bg-green-100 rounded-lg border border-green-300"
                             role="alert">
                             {{ session('success') }}
+                        </div>
+                    @endif
+                    @if (session()->has('error'))
+                        <div class="mb-6 p-4 text-sm text-red-800 bg-red-100 rounded-lg border border-red-300"
+                            role="alert">
+                            {{ session('error') }}
                         </div>
                     @endif
 

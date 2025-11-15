@@ -1,30 +1,28 @@
 <?php
 
-use function Livewire\Volt\{state, rules};
+use function Livewire\Volt\{state, rules}; // ★ useにrulesを追加
 use App\Models\Reservation;
 use App\Models\ExperienceProgram;
 use Illuminate\Support\Collection;
 
 // --- フォームの状態管理 ---
-
-// 全プログラムのリストを保持
 state(['programs' => fn() => ExperienceProgram::all(['experience_program_id', 'name'])]);
-
-// フォームの各入力値を保持
 state([
-    'experience_program_id' => '', // 初期値は空にする
+    'experience_program_id' => '',
     'reservation_date' => now()->format('Y-m-d'),
     'reservation_time' => '10:00',
     'customer_name' => '',
     'customer_phone' => '',
     'customer_email' => '',
     'participant_count' => 1,
-    'reservation_source' => 'hp', // デフォルト値を設定
-    'status' => 1, // デフォルトで「予約済」
+    'reservation_source' => 'hp',
+    'status' => 1,
     'notes' => '',
 ]);
 
-// --- バリデーションルール ---
+// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+// ★★★ このrules()の定義が抜けていたことがエラーの原因です ★★★
+// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 rules([
     'experience_program_id' => 'required|exists:experience_programs,experience_program_id',
     'reservation_date' => 'required|date',
@@ -43,16 +41,31 @@ $store = function () {
     // バリデーションを実行
     $validatedData = $this->validate();
 
+    // --- ダブルブッキングチェック ---
+    $program = ExperienceProgram::find($validatedData['experience_program_id']);
+    if ($program) {
+        $capacity = $program->capacity;
+
+        $currentParticipants = Reservation::where('experience_program_id', $validatedData['experience_program_id'])
+            ->where('reservation_date', $validatedData['reservation_date'])
+            ->where('reservation_time', $validatedData['reservation_time'] . ':00')
+            ->where('status', 1) // 予約済みのものだけをカウント
+            ->sum('participant_count');
+
+        if ($currentParticipants + $validatedData['participant_count'] > $capacity) {
+            session()->flash('error', "申し訳ありません。その日時は満員のため、予約できません。(現在の予約人数: {$currentParticipants}名 / 定員: {$capacity}名)");
+            return;
+        }
+    }
+    // --- チェックここまで ---
+
     // 時刻に秒を追加
     $validatedData['reservation_time'] .= ':00';
 
     // データベースに保存
     Reservation::create($validatedData);
 
-    // フラッシュメッセージをセッションに保存
     session()->flash('message', '新しい予約が正常に登録されました。');
-
-    // 一覧ページにリダイレクト
     return redirect()->route('reservations.index');
 };
 
@@ -73,6 +86,14 @@ $store = function () {
                 <div class="p-6 sm:p-8">
                     <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">予約の新規登録</h1>
                     <p class="text-sm text-gray-500 mb-6">必要な情報を入力し、登録ボタンを押してください。</p>
+
+                    {{-- ★★★ エラーメッセージ表示ブロックを追加 ★★★ --}}
+                    @if (session()->has('error'))
+                        <div class="mb-6 p-4 text-sm text-red-800 bg-red-100 rounded-lg border border-red-300"
+                            role="alert">
+                            {{ session('error') }}
+                        </div>
+                    @endif
 
                     <div class="space-y-6">
 
