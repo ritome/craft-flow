@@ -5,7 +5,6 @@ use App\Models\Reservation;
 use App\Models\ExperienceProgram;
 use Illuminate\Support\Collection;
 
-
 // --- フォームと表示のための state を定義 ---
 state([
     'reservation' => null,
@@ -99,118 +98,200 @@ $update = function () {
 };
 
 ?>
-<div>
-    <a href="{{ route('reservations.index') }}">戻る</a>
-    <h1>更新</h1>
 
-    @if (session()->has('success'))
-        <div style="color: green;">{{ session('success') }}</div>
-    @endif
+<div class="bg-gray-100 p-4 sm:p-6 md:p-8 min-h-screen">
+    <div class="max-w-3xl mx-auto">
 
-    <form wire:submit="update">
+        <!-- 戻るボタン -->
+        <a href="{{ route('reservations.index') }}"
+            class="mb-6 inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+            &larr; 予約カレンダーに戻る
+        </a>
 
-        <!-- ★★★ プログラム表示部分をここから修正 ★★★ -->
-        <p>
-            <label for="program_id">プログラム</label><br>
-            <span style="font-size: 0.8em; color: gray;">元の値: {{ $originalValues['programName'] }}</span><br>
+        <!-- フォームのコンテナ -->
+        <form wire:submit="update">
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="p-6 sm:p-8">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">予約情報の更新</h1>
+                    <p class="text-sm text-gray-500 mb-6">内容を編集して、更新ボタンを押してください。</p>
 
-            <select id="program_id" wire:model="form.experience_program_id">
-                @foreach ($programs as $program)
-                    <option value="{{ $program->experience_program_id }}">
-                        {{ $program->name }}
-                    </option>
-                @endforeach
-            </select>
+                    <!-- 成功メッセージ -->
+                    @if (session()->has('success'))
+                        <div class="mb-6 p-4 text-sm text-green-800 bg-green-100 rounded-lg border border-green-300"
+                            role="alert">
+                            {{ session('success') }}
+                        </div>
+                    @endif
 
-            @error('form.experience_program_id')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
-        <!-- ★★★ ここまで修正 ★★★ -->
+                    <div class="space-y-6">
+                        <!-- プログラム選択 -->
+                        <div>
+                            <label for="program_id" class="block text-sm font-medium text-gray-700">プログラム</label>
+                            <span class="text-xs text-gray-500">元の値: {{ $originalValues['programName'] }}</span>
+                            <select id="program_id" wire:model="form.experience_program_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                @foreach ($programs as $program)
+                                    <option value="{{ $program->experience_program_id }}">
+                                        {{ $program->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('form.experience_program_id')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
 
+                        <!-- 予約日 -->
+                        <div>
+                            <label for="reservation_date" class="block text-sm font-medium text-gray-700">予約日</label>
+                            <span class="text-xs text-gray-500">元の値: {{ $originalValues['reservation_date'] }}</span>
+                            <input type="date" wire:model="form.reservation_date" id="reservation_date"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('form.reservation_date')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-        <p>
-            <label for="reservation_date">予約日</label><br>
-            <span style="font-size: 0.8em; color: gray;">元の値: {{ $originalValues['reservation_date'] }}</span><br>
-            <input type="date" wire:model="form.reservation_date" id="reservation_date">
-            @error('form.reservation_date')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
+                        <!-- 予約時刻 -->
+                        <div>
+                            <label for="reservation_time" class="block text-sm font-medium text-gray-700">予約時刻</label>
+                            <span class="text-xs text-gray-500">元の値: {{ $originalValues['reservation_time'] }}</span>
+                            <input type="time" wire:model="form.reservation_time" id="reservation_time"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('form.reservation_time')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-        {{-- ... その他のフォーム要素は変更なし ... --}}
+                        <!-- 予約者名 -->
+                        <div>
+                            <label for="customer_name" class="block text-sm font-medium text-gray-700">予約者名</label>
+                            <span class="text-xs text-gray-500">元の値: {{ $originalValues['customer_name'] }}</span>
+                            <input type="text" wire:model="form.customer_name" id="customer_name"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('form.customer_name')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-        <p>
-            <label for="reservation_time">予約時刻</label><br>
-            <span style="font-size: 0.8em; color: gray;">元の値: {{ $originalValues['reservation_time'] }}</span><br>
-            <input type="time" wire:model="form.reservation_time" id="reservation_time">
-            @error('form.reservation_time')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
+                        <!-- 電話番号 -->
+                        <div>
+                            <label for="customer_phone" class="block text-sm font-medium text-gray-700">電話番号</label>
+                            <span class="text-xs text-gray-500">元の値: {{ $originalValues['customer_phone'] }}</span>
+                            <input type="text" wire:model="form.customer_phone" id="customer_phone"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('form.customer_phone')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-        <p>
-            <label for="customer_name">予約者名</label><br>
-            <span style="font-size: 0.8em; color: gray;">元の値: {{ $originalValues['customer_name'] }}</span><br>
-            <input type="text" wire:model="form.customer_name" id="customer_name">
-            @error('form.customer_name')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
+                        <!-- メールアドレス -->
+                        <div>
+                            <label for="customer_email" class="block text-sm font-medium text-gray-700">メールアドレス</label>
+                            <span class="text-xs text-gray-500">元の値: {{ $originalValues['customer_email'] }}</span>
+                            <input type="email" wire:model="form.customer_email" id="customer_email"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('form.customer_email')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-        <p>
-            <label for="customer_phone">電話番号</label><br>
-            <span style="font-size: 0.8em; color: gray;">元の値: {{ $originalValues['customer_phone'] }}</span><br>
-            <input type="text" wire:model="form.customer_phone" id="customer_phone">
-            @error('form.customer_phone')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
+                        <!-- 参加人数 -->
+                        <div>
+                            <label for="participant_count" class="block text-sm font-medium text-gray-700">参加人数</label>
+                            <span class="text-xs text-gray-500">元の値: {{ $originalValues['participant_count'] }}</span>
+                            <input type="number" wire:model="form.participant_count" id="participant_count"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                min="1">
+                            @error('form.participant_count')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-        <p>
-            <label for="customer_email">メールアドレス</label><br>
-            <span style="font-size: 0.8em; color: gray;">元の値: {{ $originalValues['customer_email'] }}</span><br>
-            <input type="email" wire:model="form.customer_email" id="customer_email">
-            @error('form.customer_email')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
+                        <!-- 予約経路 -->
+                        <!-- 予約経路 -->
+                        <div>
+                            <label for="reservation_source" class="block text-sm font-medium text-gray-700">予約経路</label>
 
-        <p>
-            <label for="participant_count">参加人数</label><br>
-            <span style="font-size: 0.8em; color: gray;">元の値: {{ $originalValues['participant_count'] }}</span><br>
-            <input type="number" wire:model="form.participant_count" id="participant_count">
-            @error('form.participant_count')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
+                            {{-- 元の値を表示 --}}
+                            <span class="text-xs text-gray-500">
+                                元の値: {{ $originalValues['reservation_source'] }}
+                            </span>
 
-        <p>
-            <label for="reservation_source">予約経路</label><br>
-            <span style="font-size: 0.8em; color: gray;">元の値: {{ $originalValues['reservation_source'] }}</span><br>
-            <input type="text" wire:model="form.reservation_source" id="reservation_source">
-            @error('form.reservation_source')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
+                            <select id="reservation_source" wire:model="form.reservation_source"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="hp">自社HP</option>
+                                <option value="jalan">じゃらん</option>
+                                <option value="asoview">アソビュー</option>
+                                <option value="self_call">自社の電話</option>
+                                <option value="center_call">センターの電話</option>
+                                <option value="other">その他</option>
+                            </select>
 
-        <p>
-            <label for="status">ステータス</label><br>
-            <span style="font-size: 0.8em; color: gray;">元の値: {{ $originalValues['status'] }}</span><br>
-            <input type="text" wire:model="form.status" id="status">
-            @error('form.status')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
+                            @error('form.reservation_source')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-        <p>
-            <label for="notes">備考</label><br>
-            <textarea wire:model="form.notes" id="notes" rows="3"></textarea>
-            @error('form.notes')
-                <span class="error">({{ $message }})</span>
-            @enderror
-        </p>
+                        <!-- ステータス -->
+                        <!-- ステータス -->
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700">予約状態</label>
 
-        <button type="submit">更新</button>
-    </form>
+                            {{-- 元の値を分かりやすく表示 --}}
+                            <span class="text-xs text-gray-500">
+                                元の値:
+                                @switch($originalValues['status'])
+                                    @case(1)
+                                        予約済
+                                    @break
+
+                                    @case(2)
+                                        キャンセル済
+                                    @break
+
+                                    @case(3)
+                                        完了
+                                    @break
+
+                                    @default
+                                        不明 ({{ $originalValues['status'] }})
+                                @endswitch
+                            </span>
+
+                            <select id="status" wire:model="form.status"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="1">1: 予約済</option>
+                                <option value="2">2: キャンセル済</option>
+                                <option value="3">3: 完了</option>
+                            </select>
+
+                            @error('form.status')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- 備考 -->
+                        <div>
+                            <label for="notes" class="block text-sm font-medium text-gray-700">備考</label>
+                            <textarea wire:model="form.notes" id="notes" rows="4"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                            @error('form.notes')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <!-- フッター部分 -->
+                <div class="bg-gray-50 px-6 py-4 flex justify-end">
+                    <button type="submit"
+                        class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        更新する
+                    </button>
+                </div>
+            </div>
+        </form>
+
+    </div>
 </div>

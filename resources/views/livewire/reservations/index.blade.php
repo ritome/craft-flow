@@ -39,7 +39,16 @@ $create = fn() => redirect()->route('reservations.create');
 <div class="p-4 bg-gray-50 min-h-screen">
     {{-- ヘッダー：年月表示とナビゲーション --}}
     <div class="flex items-center justify-between mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">予約カレンダー</h1>
+
+        <!-- 左側：タイトルとダッシュボードへのリンク -->
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">予約カレンダー</h1>
+            <a href="{{ route('dashboard') }}" class="text-sm text-indigo-600 hover:text-indigo-800 hover:underline">
+                &larr; ダッシュボードに戻る
+            </a>
+        </div>
+
+        <!-- 右側：カレンダー操作と新規登録ボタン -->
         <div class="flex items-center space-x-4">
             <h2 class="text-2xl font-semibold text-gray-700 w-48 text-center">{{ $this->calendarInfo['monthName'] }}</h2>
             <div class="flex rounded-md shadow-sm">
@@ -62,6 +71,7 @@ $create = fn() => redirect()->route('reservations.create');
             </button>
         </div>
     </div>
+
 
     {{-- カレンダー本体 --}}
     <div wire:loading.class="opacity-50 transition-opacity"
