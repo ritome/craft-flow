@@ -4,7 +4,7 @@ use function Livewire\Volt\{state, rules}; // ★ useにrulesを追加
 use App\Models\Reservation;
 use App\Models\ExperienceProgram;
 use Illuminate\Support\Collection;
-
+use App\Mail\ReservationConfirmed;
 // --- フォームの状態管理 ---
 state(['programs' => fn() => ExperienceProgram::all(['experience_program_id', 'name'])]);
 state([
@@ -61,12 +61,30 @@ $store = function () {
 
     // 時刻に秒を追加
     $validatedData['reservation_time'] .= ':00';
+    $newReservation = Reservation::create($validatedData);
+    // ★★★ ここからメールプレビューのロジック ★★★
 
-    // データベースに保存
-    Reservation::create($validatedData);
+    // 1. Mailableオブジェクトをインスタンス化
+    $mailable = new ReservationConfirmed($newReservation);
 
-    session()->flash('message', '新しい予約が正常に登録されました。');
-    return redirect()->route('reservations.index');
+    // 2. Mailableをビルドし、そのHTMLコンテンツを文字列として取得
+    $mailHtmlContent = $mailable->render();
+
+    // 3. 取得したHTMLをモーダルで表示するイベントを発行する
+    //    Livewireの `dispatch` ヘルパー関数を使う
+    $this->dispatch('show-email-preview', html: $mailHtmlContent);
+
+    // ★★★ ここまで ★★★
+
+    // メール送信は行わないので、Mail::to(...)の行はコメントアウトまたは削除
+    // if ($newReservation->customer_email) {
+    //     Mail::to($newReservation->customer_email)->send(new ReservationConfirmed($newReservation));
+    // }
+
+    session()->flash('message', '新しい予約が正常に登録されました。（メールプレビューを表示）');
+
+    // プレビューを見せるため、リダイレクトは一旦コメントアウトしても良い
+    // return redirect()->route('reservations.index');
 };
 
 ?>

@@ -11,6 +11,9 @@
 
 <body>
     {{ $slot }}
+
+    {{-- ★★★ この一行を追加 ★★★ --}}
+    <x-email-preview-modal />
 </body>
 
 </html>
