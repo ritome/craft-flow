@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Services\Parsers\ParserInterface;
+use App\Services\Parsers\PosAParser;
+use App\Services\Parsers\PosBParser;
+use InvalidArgumentException;
 
 /**
  * 適切なパーサーを選択するファクトリクラス
@@ -12,16 +15,46 @@ use App\Services\Parsers\ParserInterface;
 class ParserFactory
 {
     /**
+     * 利用可能なパーサークラスのリスト
+     *
+     * @var array<class-string<ParserInterface>>
+     */
+    private const AVAILABLE_PARSERS = [
+        PosAParser::class,
+        PosBParser::class,
+    ];
+
+    /**
      * テキストに適したパーサーを取得
      *
-     * @param string $text PDF抽出テキスト
+     * @param  string  $text  PDF抽出テキスト
      * @return ParserInterface 適切なパーサー
-     * @throws \Exception 対応するパーサーが見つからない場合
+     *
+     * @throws InvalidArgumentException 対応するパーサーが見つからない場合
      */
     public function getParser(string $text): ParserInterface
     {
-        // TODO: 実装
-        throw new \Exception('対応するパーサーが見つかりません');
+        foreach (self::AVAILABLE_PARSERS as $parserClass) {
+            /** @var ParserInterface $parser */
+            $parser = new $parserClass;
+
+            if ($parser->canParse($text)) {
+                return $parser;
+            }
+        }
+
+        throw new InvalidArgumentException(
+            '対応するパーサーが見つかりませんでした。PDFのフォーマットを確認してください。'
+        );
+    }
+
+    /**
+     * 利用可能なパーサークラスのリストを取得
+     *
+     * @return array<class-string<ParserInterface>>
+     */
+    public static function getAvailableParsers(): array
+    {
+        return self::AVAILABLE_PARSERS;
     }
 }
-
