@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Services\Parsers\ParserInterface;
 use App\Services\Parsers\PosAParser;
 use App\Services\Parsers\PosBParser;
+use App\Services\Parsers\PosRegisterParser;
 use InvalidArgumentException;
 
 /**
@@ -20,8 +21,9 @@ class ParserFactory
      * @var array<class-string<ParserInterface>>
      */
     private const AVAILABLE_PARSERS = [
-        PosAParser::class,
-        PosBParser::class,
+        PosRegisterParser::class, // 岩手県センター POSレジ用（優先）
+        PosAParser::class,        // テスト用
+        PosBParser::class,        // テスト用
     ];
 
     /**

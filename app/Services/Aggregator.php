@@ -8,7 +8,7 @@ namespace App\Services;
  * 正規化されたデータを集計するサービス
  *
  * 複数のPDFパース結果を集計し、
- * 全体の売上や商品別の集計を行う
+ * Excel出力用のデータ構造を生成する
  */
 class Aggregator
 {
@@ -24,6 +24,85 @@ class Aggregator
             return $this->emptyResult();
         }
 
+        // POSレジ形式かどうかを判定
+        $firstData = $normalizedDataList[0];
+        if (isset($firstData['register_id'])) {
+            return $this->aggregatePosRegisters($normalizedDataList);
+        }
+
+        // 旧形式（互換性のため保持）
+        return $this->aggregateLegacy($normalizedDataList);
+    }
+
+    /**
+     * POSレジデータを集計
+     */
+    private function aggregatePosRegisters(array $normalizedDataList): array
+    {
+        $businessDate = $normalizedDataList[0]['business_date'] ?? date('Y-m-d');
+        $registers = [];
+        $productMap = [];
+        $totalQuantity = 0;
+        $totalSales = 0;
+
+        // レジ別に集計
+        foreach ($normalizedDataList as $data) {
+            $registers[] = [
+                'register_id' => $data['register_id'],
+                'output_datetime' => $data['output_datetime'],
+                'items' => $data['items'],
+                'product_count' => $data['product_count'] ?? 0,
+                'quantity_total' => $data['quantity_total'] ?? 0,
+                'sales_total' => $data['total'] ?? 0,
+            ];
+
+            // 商品別に集計
+            foreach ($data['items'] as $item) {
+                $code = $item['product_code'];
+
+                if (!isset($productMap[$code])) {
+                    $productMap[$code] = [
+                        'product_code' => $code,
+                        'product_name' => $item['product_name'],
+                        'unit_price' => $item['unit_price'],
+                        'total_quantity' => 0,
+                        'total_sales' => 0,
+                    ];
+                }
+
+                $productMap[$code]['total_quantity'] += $item['quantity'];
+                $productMap[$code]['total_sales'] += $item['subtotal'];
+            }
+
+            $totalQuantity += $data['quantity_total'] ?? 0;
+            $totalSales += $data['total'] ?? 0;
+        }
+
+        // 商品を売上順にソート
+        $products = array_values($productMap);
+        usort($products, fn ($a, $b) => $b['total_sales'] <=> $a['total_sales']);
+
+        return [
+            'business_date' => $businessDate,
+            'generated_at' => date('Y-m-d H:i:s'),
+            'file_count' => count($normalizedDataList),
+            'success_count' => count($normalizedDataList),
+            'failed_count' => 0,
+            'registers' => $registers,
+            'products' => $products,
+            'summary' => [
+                'total_product_types' => count($productMap),
+                'total_quantity' => $totalQuantity,
+                'total_sales' => $totalSales,
+            ],
+        ];
+    }
+
+    /**
+     * 旧形式のデータを集計（互換性のため）
+     */
+    private function aggregateLegacy(array $normalizedDataList): array
+    {
         $totalSales = 0;
         $itemsMap = [];
         $dailySales = [];

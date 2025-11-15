@@ -20,6 +20,12 @@ class Normalizer
      */
     public function normalize(array $parsedData): array
     {
+        // PosRegisterParser形式（新仕様）
+        if (isset($parsedData['register_id'])) {
+            return $this->normalizePosRegister($parsedData);
+        }
+
+        // 旧形式（互換性のため保持）
         return [
             'date' => $this->normalizeDate($parsedData),
             'items' => $this->normalizeItems($parsedData),
@@ -29,11 +35,51 @@ class Normalizer
     }
 
     /**
+     * POSレジ形式のデータを正規化
+     */
+    private function normalizePosRegister(array $data): array
+    {
+        return [
+            'register_id' => $this->normalizeString($data['register_id'] ?? 'UNKNOWN'),
+            'business_date' => $this->normalizeDate($data),
+            'output_datetime' => $data['output_datetime'] ?? date('Y-m-d H:i:s'),
+            'items' => $this->normalizePosRegisterItems($data['items'] ?? []),
+            'total' => $this->normalizeInteger($data['total'] ?? 0),
+            'product_count' => count(array_filter(
+                $data['items'] ?? [],
+                fn ($item) => ($item['quantity'] ?? 0) > 0
+            )),
+            'quantity_total' => array_sum(array_column($data['items'] ?? [], 'quantity')),
+        ];
+    }
+
+    /**
+     * POSレジ商品データを正規化
+     */
+    private function normalizePosRegisterItems(array $items): array
+    {
+        return array_map(function ($item) {
+            return [
+                'product_code' => $this->normalizeString($item['product_code'] ?? ''),
+                'product_name' => $this->normalizeString($item['product_name'] ?? '不明'),
+                'unit_price' => $this->normalizeInteger($item['unit_price'] ?? 0),
+                'quantity' => $this->normalizeInteger($item['quantity'] ?? 0),
+                'subtotal' => $this->normalizeInteger($item['subtotal'] ?? 0),
+            ];
+        }, $items);
+    }
+
+    /**
      * 日付を正規化（YYYY-MM-DD形式）
      */
     private function normalizeDate(array $data): string
     {
-        $date = $data['date'] ?? date('Y-m-d');
+        // POSレジ形式の場合
+        if (isset($data['business_date'])) {
+            $date = $data['business_date'];
+        } else {
+            $date = $data['date'] ?? date('Y-m-d');
+        }
 
         // 既にYYYY-MM-DD形式ならそのまま返す
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {

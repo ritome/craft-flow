@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Exports\SalesDataExport;
+use App\Exports\SalesExport;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -22,13 +22,16 @@ class ExcelExporter
     public function export(array $aggregatedData): string
     {
         try {
-            // 出力ファイル名を生成
-            $filename = 'sales_data_'.date('YmdHis').'.xlsx';
+            // 出力ファイル名を生成（仕様書に準拠）
+            // 形式: 売上集計_{営業日}_{タイムスタンプ}.xlsx
+            $businessDate = $aggregatedData['business_date'] ?? date('Y-m-d');
+            $timestamp = date('YmdHis');
+            $filename = "売上集計_{$businessDate}_{$timestamp}.xlsx";
             $storagePath = 'exports/'.$filename;
 
             // Excelファイルを生成
             Excel::store(
-                new SalesDataExport($aggregatedData),
+                new SalesExport($aggregatedData),
                 $storagePath,
                 'local'
             );
@@ -37,8 +40,9 @@ class ExcelExporter
 
             Log::info('Excelファイルを生成しました', [
                 'path' => $fullPath,
-                'total_sales' => $aggregatedData['total_sales'] ?? 0,
-                'items_count' => count($aggregatedData['items'] ?? []),
+                'business_date' => $businessDate,
+                'total_sales' => $aggregatedData['summary']['total_sales'] ?? 0,
+                'file_count' => $aggregatedData['file_count'] ?? 0,
             ]);
 
             return $fullPath;
