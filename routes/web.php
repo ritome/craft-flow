@@ -25,7 +25,8 @@ Volt::route('/reservations/{reservations}', 'reservations.show')->name('reservat
 Volt::route('/experience_programs/{experience_programs}/edit', 'experience_programs.edit')->name('experience_programs.edit');
 
 // 編集ページ
-Volt::route('/reservations/{reservations}/edit', 'reservations.edit')->name('reservations.edit');
+
+Volt::route('/reservations/{reservation}/edit', 'reservations.edit')->name('reservations.edit');
 
 Route::prefix('reservations')->group(function () {
     // 1. 予約参照/カレンダー (Select.php) - /reservations

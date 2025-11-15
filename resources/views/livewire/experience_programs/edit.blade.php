@@ -56,7 +56,7 @@ $update = function () {
         </p>
 
         <p>
-            <label for="duration">所要時間</label>
+            <label for="duration">所要時間(分)</label>
             @error('duration')
                 <span class="error">({{ $message }})</span>
             @enderror
