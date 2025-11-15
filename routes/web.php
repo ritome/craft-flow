@@ -51,3 +51,6 @@ Route::prefix('experience_programs')->group(function () {
     Volt::route('/update', 'experience_programs.update')->name('experience_programs.update');
     Volt::route('/select', 'experience_programs.select')->name('experience_programs.select');
 });
+
+
+Volt::route('/dashboard', 'dashboard')->name('dashboard');
