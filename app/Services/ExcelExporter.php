@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Exports\SalesExport;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 /**
@@ -16,7 +17,7 @@ class ExcelExporter
     /**
      * 集計データをExcelファイルとして出力
      *
-     * @param array $aggregatedData 集計済みデータ
+     * @param  array  $aggregatedData  集計済みデータ
      * @return string 出力されたファイルパス
      */
     public function export(array $aggregatedData): string
@@ -36,7 +37,9 @@ class ExcelExporter
                 'local'
             );
 
-            $fullPath = storage_path('app/'.$storagePath);
+            // Storage::disk('local')->path()を使用して正しいフルパスを取得
+            // localディスクのrootがstorage/app/privateに設定されているため、これを使用
+            $fullPath = Storage::disk('local')->path($storagePath);
 
             Log::info('Excelファイルを生成しました', [
                 'path' => $fullPath,
@@ -56,4 +59,3 @@ class ExcelExporter
         }
     }
 }
-

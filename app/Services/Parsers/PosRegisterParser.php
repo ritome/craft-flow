@@ -19,19 +19,19 @@ use InvalidArgumentException;
 class PosRegisterParser implements ParserInterface
 {
     /**
-     * レジ番号パターン
+     * レジ番号パターン（全角・半角コロンに対応）
      */
-    private const REGISTER_PATTERN = '/レジ番号:POS(\d+)/u';
+    private const REGISTER_PATTERN = '/レジ番号[：:]POS(\d+)/u';
 
     /**
-     * 営業日パターン
+     * 営業日パターン（全角・半角コロンに対応）
      */
-    private const BUSINESS_DATE_PATTERN = '/営業日:令和(\d+)年(\d+)月(\d+)日/u';
+    private const BUSINESS_DATE_PATTERN = '/営業日[：:]令和(\d+)年(\d+)月(\d+)日/u';
 
     /**
-     * 出力日時パターン
+     * 出力日時パターン（全角・半角コロンに対応）
      */
-    private const OUTPUT_DATETIME_PATTERN = '/出力日時:令和(\d+)年(\d+)月(\d+)日\s+(\d+)時(\d+)分/u';
+    private const OUTPUT_DATETIME_PATTERN = '/出力日時[：:]令和(\d+)年(\d+)月(\d+)日\s+(\d+)時(\d+)分/u';
 
     /**
      * 商品データ行パターン（2カラム）
@@ -310,5 +310,3 @@ class PosRegisterParser implements ParserInterface
         }
     }
 }
-
-

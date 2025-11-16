@@ -24,8 +24,9 @@ class PdfImportService
     /**
      * PDFファイルをインポートしてExcelを出力
      *
-     * @param array $pdfFiles アップロードされたPDFファイルパス配列
+     * @param  array  $pdfFiles  アップロードされたPDFファイルパス配列
      * @return string 出力されたExcelファイルパス
+     *
      * @throws InvalidArgumentException PDFファイルが存在しない、または読み取れない場合
      * @throws RuntimeException 処理中にエラーが発生した場合
      */
@@ -53,6 +54,15 @@ class PdfImportService
 
                     // 1. PDFからテキスト抽出
                     $text = $this->pdfReader->extract($pdfFile);
+
+                    // デバッグ: 抽出されたテキストの最初の500文字をログ出力
+                    Log::debug("PDFから抽出されたテキスト: {$index}", [
+                        'file' => basename($pdfFile),
+                        'text_length' => strlen($text),
+                        'text_preview' => mb_substr($text, 0, 500),
+                        'has_register_pattern' => preg_match('/レジ番号:POS/u', $text) === 1,
+                        'has_business_date_pattern' => preg_match('/営業日:令和/u', $text) === 1,
+                    ]);
 
                     // 2. 適切なパーサーを取得してパース
                     $parser = $this->parserFactory->getParser($text);

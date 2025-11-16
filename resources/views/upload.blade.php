@@ -5,7 +5,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>レジデータアップロード - CraftFlow</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* カスタムスタイル */
+        .file-upload-area {
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s;
+        }
+
+        .file-upload-area:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .file-upload-area.drag-over {
+            border-color: #2563eb;
+            background-color: #dbeafe;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50">
@@ -13,10 +31,10 @@
         <div class="max-w-3xl mx-auto">
             <!-- ヘッダー -->
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
                     📊 レジデータ自動集計システム
                 </h1>
-                <p class="mt-2 text-gray-600">
+                <p class="text-gray-600">
                     POSレジPDFファイルをアップロードして、Excelで集計結果をダウンロードできます
                 </p>
             </div>
@@ -54,40 +72,37 @@
 
                         <!-- ファイル選択エリア -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                PDFファイルを選択（最大4ファイル）
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                📄 PDFファイルを選択（最大4ファイル）
                             </label>
-                            <div
-                                class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors">
-                                <div class="space-y-1 text-center">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
-                                        viewBox="0 0 48 48">
-                                        <path
-                                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    <div class="flex text-sm text-gray-600">
-                                        <label for="pdf_files"
-                                            class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-                                            <span>ファイルを選択</span>
-                                            <input id="pdf_files" name="pdf_files[]" type="file" class="sr-only"
-                                                multiple accept=".pdf" required onchange="displayFileNames()">
-                                        </label>
-                                        <p class="pl-1">またはドラッグ&ドロップ</p>
-                                    </div>
-                                    <p class="text-xs text-gray-500">
-                                        PDF形式、最大10MB/ファイル
-                                    </p>
+                            <div class="file-upload-area rounded-lg p-8 text-center cursor-pointer" id="dropZone">
+                                <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" stroke="currentColor" fill="none"
+                                    viewBox="0 0 48 48">
+                                    <path
+                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div class="mb-2">
+                                    <label for="pdf_files"
+                                        class="cursor-pointer text-blue-600 hover:text-blue-500 font-medium">
+                                        ファイルを選択
+                                    </label>
+                                    <span class="text-gray-600">またはドラッグ&ドロップ</span>
                                 </div>
+                                <p class="text-sm text-gray-500">
+                                    PDF形式、最大10MB/ファイル
+                                </p>
+                                <input id="pdf_files" name="pdf_files[]" type="file" class="hidden" multiple
+                                    accept=".pdf" required>
                             </div>
                         </div>
 
                         <!-- 選択されたファイルリスト -->
                         <div id="fileList" class="mb-6 hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                選択されたファイル
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                ✅ 選択されたファイル
                             </label>
-                            <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <ul id="fileListItems" class="space-y-2">
                                     <!-- JavaScriptで動的に追加 -->
                                 </ul>
@@ -105,8 +120,8 @@
                                     </svg>
                                 </div>
                                 <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-blue-800">使い方</h3>
-                                    <div class="mt-2 text-sm text-blue-700">
+                                    <h3 class="text-sm font-medium text-blue-800 mb-2">💡 使い方</h3>
+                                    <div class="text-sm text-blue-700">
                                         <ol class="list-decimal list-inside space-y-1">
                                             <li>4台のPOSレジから出力されたPDFファイルを選択してください</li>
                                             <li>「集計してダウンロード」ボタンをクリック</li>
@@ -119,7 +134,8 @@
 
                         <!-- アップロードボタン -->
                         <div class="flex items-center justify-between">
-                            <a href="{{ route('pdf.history') }}" class="text-sm text-blue-600 hover:text-blue-500">
+                            <a href="{{ route('pdf.history') }}"
+                                class="text-sm text-blue-600 hover:text-blue-500 font-medium">
                                 📋 履歴を見る
                             </a>
                             <button type="submit" id="submitBtn"
@@ -139,78 +155,149 @@
             <!-- フッター情報 -->
             <div class="mt-8 text-center text-sm text-gray-500">
                 <p>CraftFlow - レジデータ自動集計システム v1.0.0</p>
+                <p class="mt-1 text-xs">Laravel 12 × TailwindCSS 4</p>
             </div>
         </div>
     </div>
 
     <!-- JavaScript -->
     <script>
+        // DOM要素を取得
+        const fileInput = document.getElementById('pdf_files');
+        const dropZone = document.getElementById('dropZone');
+        const fileList = document.getElementById('fileList');
+        const fileListItems = document.getElementById('fileListItems');
+        const uploadForm = document.getElementById('uploadForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitBtnText = document.getElementById('submitBtnText');
+
+        // 元のボタンHTML（復元用）
+        const originalButtonHTML = submitBtn.innerHTML;
+
         // ファイル選択時の表示
         function displayFileNames() {
-            const input = document.getElementById('pdf_files');
-            const fileList = document.getElementById('fileList');
-            const fileListItems = document.getElementById('fileListItems');
-
-            if (input.files.length > 0) {
+            if (fileInput.files.length > 0) {
                 fileList.classList.remove('hidden');
                 fileListItems.innerHTML = '';
 
-                Array.from(input.files).forEach((file, index) => {
+                console.log('📁 選択されたファイル数:', fileInput.files.length);
+
+                Array.from(fileInput.files).forEach((file, index) => {
+                    console.log(`📄 ファイル ${index + 1}:`, {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        lastModified: new Date(file.lastModified).toLocaleString('ja-JP')
+                    });
+
                     const li = document.createElement('li');
-                    li.className = 'flex items-center text-sm text-gray-700';
+                    li.className =
+                        'flex items-center text-sm text-gray-700 bg-white p-2 rounded border border-gray-200';
                     li.innerHTML = `
-                        <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
-                        <span>${file.name}</span>
-                        <span class="ml-2 text-gray-500">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                        <span class="flex-1 truncate">${file.name}</span>
+                        <span class="ml-2 text-gray-500 text-xs whitespace-nowrap">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
                     `;
                     fileListItems.appendChild(li);
                 });
             } else {
                 fileList.classList.add('hidden');
+                console.log('⚠️ ファイルが選択されていません');
             }
         }
 
+        // ボタンの状態を復元する関数
+        function resetSubmitButton() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalButtonHTML;
+            console.log('✅ ボタンの状態を復元しました');
+        }
+
+        // ファイル入力のクリックイベント（labelクリックとの二重発火を防ぐ）
+        dropZone.addEventListener('click', (e) => {
+            // labelやinput要素自体のクリックは無視（既に処理される）
+            if (e.target.tagName !== 'LABEL' && e.target.tagName !== 'INPUT') {
+                fileInput.click();
+            }
+        });
+
+        // ファイル選択時
+        fileInput.addEventListener('change', displayFileNames);
+
+        // ドラッグオーバー
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        // ドラッグリーブ
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        });
+
+        // ドロップ
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                displayFileNames();
+            }
+        });
+
         // フォーム送信時の処理
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            const submitBtn = document.getElementById('submitBtn');
-            const submitBtnText = document.getElementById('submitBtnText');
+        uploadForm.addEventListener('submit', function(e) {
+            // ファイルが選択されているか確認
+            if (fileInput.files.length === 0) {
+                e.preventDefault();
+                alert('PDFファイルを選択してください。');
+                return false;
+            }
+
+            console.log('🚀 フォーム送信開始');
+            console.log('📦 送信ファイル数:', fileInput.files.length);
 
             // ボタンを無効化
             submitBtn.disabled = true;
-            submitBtnText.textContent = '処理中...';
 
-            // スピナーを追加
+            // スピナーを表示
             submitBtn.innerHTML = `
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>処理中...</span>
+                <span>処理中... しばらくお待ちください</span>
             `;
+
+            // ダウンロード完了を検出してボタンを復元
+            // ファイルダウンロードの場合、ページ遷移が発生しないため、タイムアウトで復元
+            // エラーの場合はページがリロードされるため、この処理は実行されない
+            setTimeout(() => {
+                resetSubmitButton();
+            }, 3000); // 3秒後にボタンを復元（ダウンロードが開始されていれば十分）
         });
 
-        // ドラッグ&ドロップ対応
-        const dropZone = document.querySelector('.border-dashed');
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        // ページ読み込み完了時
+        window.addEventListener('load', () => {
+            console.log('✅ ページ読み込み完了');
+            console.log('📝 ファイル入力欄:', fileInput ? '正常' : 'エラー');
         });
 
-        dropZone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-
-            const input = document.getElementById('pdf_files');
-            input.files = e.dataTransfer.files;
-            displayFileNames();
+        // ページの可視性変更を監視（別タブから戻ってきた時など）
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && submitBtn.disabled) {
+                console.log('👀 ページが再表示されました - ボタンの状態を確認');
+                // ページが表示された時、ボタンが無効のままなら復元
+                setTimeout(() => {
+                    if (submitBtn.disabled) {
+                        resetSubmitButton();
+                    }
+                }, 1000);
+            }
         });
     </script>
 </body>
