@@ -99,9 +99,15 @@
 
                         <!-- 選択されたファイルリスト -->
                         <div id="fileList" class="mb-6 hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-3">
-                                ✅ 選択されたファイル
-                            </label>
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    ✅ 選択されたファイル
+                                </label>
+                                <button type="button" id="clearBtn"
+                                    class="text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 border border-red-300 rounded-md hover:bg-red-50 transition-colors">
+                                    🗑️ クリア
+                                </button>
+                            </div>
                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <ul id="fileListItems" class="space-y-2">
                                     <!-- JavaScriptで動的に追加 -->
@@ -110,18 +116,18 @@
                         </div>
 
                         <!-- 説明 -->
-                        <div class="mb-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                        <div class="mb-6 bg-gray-50 border-l-4 border-gray-400 p-4 rounded">
                             <div class="flex">
                                 <div class="flex-shrink-0">
-                                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg class="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd"
                                             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
                                             clip-rule="evenodd" />
                                     </svg>
                                 </div>
                                 <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-blue-800 mb-2">💡 使い方</h3>
-                                    <div class="text-sm text-blue-700">
+                                    <h3 class="text-sm font-medium text-gray-800 mb-2">💡 使い方</h3>
+                                    <div class="text-sm text-gray-700">
                                         <ol class="list-decimal list-inside space-y-1">
                                             <li>4台のPOSレジから出力されたPDFファイルを選択してください</li>
                                             <li>「集計してダウンロード」ボタンをクリック</li>
@@ -170,6 +176,7 @@
         const uploadForm = document.getElementById('uploadForm');
         const submitBtn = document.getElementById('submitBtn');
         const submitBtnText = document.getElementById('submitBtnText');
+        const clearBtn = document.getElementById('clearBtn');
 
         // 元のボタンHTML（復元用）
         const originalButtonHTML = submitBtn.innerHTML;
@@ -225,6 +232,14 @@
 
         // ファイル選択時
         fileInput.addEventListener('change', displayFileNames);
+
+        // クリアボタンのクリック時
+        clearBtn.addEventListener('click', () => {
+            console.log('🗑️ ファイル選択をクリアしました');
+            fileInput.value = '';
+            fileList.classList.add('hidden');
+            fileListItems.innerHTML = '';
+        });
 
         // ドラッグオーバー
         dropZone.addEventListener('dragover', (e) => {
