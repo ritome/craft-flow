@@ -11,13 +11,16 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
 
 /**
  * シート3: レジ別詳細
  *
  * 各レジの詳細データを表示
  */
-class RegisterDetailSheet implements FromArray, WithHeadings, WithTitle, WithStyles
+class RegisterDetailSheet implements FromArray, WithHeadings, WithTitle, WithStyles, WithColumnWidths, WithEvents
 {
     private array $subtotalRows = [];
 
@@ -55,21 +58,21 @@ class RegisterDetailSheet implements FromArray, WithHeadings, WithTitle, WithSty
                     $register['register_id'],
                     $item['product_code'],
                     $item['product_name'],
-                    '¥'.number_format($item['unit_price']),
+                    '¥' . number_format($item['unit_price']),
                     $item['quantity'],
-                    '¥'.number_format($item['subtotal']),
+                    '¥' . number_format($item['subtotal']),
                 ];
                 $currentRow++;
             }
 
             // レジ小計行
             $data[] = [
-                $register['register_id'].' 小計',
+                $register['register_id'] . ' 小計',
                 '',
                 '',
                 '',
                 $register['quantity_total'],
-                '¥'.number_format($register['sales_total']),
+                '¥' . number_format($register['sales_total']),
             ];
             $this->subtotalRows[] = $currentRow;
             $currentRow++;
@@ -83,7 +86,7 @@ class RegisterDetailSheet implements FromArray, WithHeadings, WithTitle, WithSty
             '',
             '',
             $summary['total_quantity'] ?? 0,
-            '¥'.number_format($summary['total_sales'] ?? 0),
+            '¥' . number_format($summary['total_sales'] ?? 0),
         ];
         $this->subtotalRows[] = $currentRow;
 
@@ -122,5 +125,30 @@ class RegisterDetailSheet implements FromArray, WithHeadings, WithTitle, WithSty
 
         return $styles;
     }
-}
 
+    // 出力シートのカラム幅定義
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 15,  // レジ番号
+            'B' => 20,  // 商品コード
+            'C' => 60,  // 商品名
+            'D' => 12,  // 単価
+            'E' => 12,  // 数量
+            'F' => 15,  // 小計
+        ];
+    }
+
+    // ヘッダー行にオートフィルタを設定
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                // ヘッダー行にオートフィルタを設定
+                $lastColumn = 'F'; // 最後の列（小計）
+                $lastRow = count($this->aggregatedData['registers'] ?? []) + 1; // データ行数 + ヘッダー
+                $event->sheet->setAutoFilter("A1:{$lastColumn}{$lastRow}");
+            },
+        ];
+    }
+}
