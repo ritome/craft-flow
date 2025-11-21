@@ -55,6 +55,15 @@ class SettlementController extends Controller
     public function generate(SettlementRequest $request): RedirectResponse
     {
         try {
+            \Log::info('Settlement generation request received', [
+                'billing_dates' => [
+                    'start' => $request->input('billing_start_date'),
+                    'end' => $request->input('billing_end_date'),
+                ],
+                'customer_file' => $request->file('customer_file')->getClientOriginalName(),
+                'sales_file' => $request->file('sales_file')->getClientOriginalName(),
+            ]);
+
             // SettlementService に処理を委譲
             $settlement = $this->settlementService->generateSettlements(
                 billingStartDate: $request->input('billing_start_date'),
@@ -106,6 +115,8 @@ class SettlementController extends Controller
      * 
      * Issue #17: 過去精算書履歴ダウンロード機能
      * 
+     * ZIPファイルまたは単一Excelファイルに対応
+     * 
      * @param  Settlement  $settlement
      * @return StreamedResponse|RedirectResponse
      */
@@ -119,12 +130,24 @@ class SettlementController extends Controller
         }
 
         $content = $settlement->getExcelContent();
-        $filename = "settlement_{$settlement->billing_start_date->format('Ymd')}-{$settlement->billing_end_date->format('Ymd')}.xlsx";
+        
+        // ファイルの拡張子を取得（.zip or .xlsx）
+        $extension = pathinfo($settlement->excel_path, PATHINFO_EXTENSION);
+        $dateStr = $settlement->billing_start_date->format('Ymd').'-'.$settlement->billing_end_date->format('Ymd');
+        
+        // ZIPファイルか単一Excelファイルかで拡張子とMIMEタイプを変更
+        if ($extension === 'zip') {
+            $filename = "settlement_{$dateStr}.zip";
+            $mimeType = 'application/zip';
+        } else {
+            $filename = "settlement_{$dateStr}.xlsx";
+            $mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        }
 
         return response()->streamDownload(function () use ($content) {
             echo $content;
         }, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type' => $mimeType,
         ]);
     }
 

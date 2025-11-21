@@ -1,0 +1,15 @@
+# Excel 仕様に関するルール（for Cursor）
+
+- このプロジェクトでは、Excel（.xlsx）ファイル自体はバイナリであり、
+  モデルやサービスを設計するときに中身を直接読むことはできない前提とする。
+- その代わり、Excel の列構成やセル配置は、`docs/excel_layout_*.md` に
+  テキストとしてまとめてある。
+- Excel を扱うコード（インポート／エクスポート／テンプレート書き込み）を書くときは、
+  必ず次のファイルを参照すること：
+  - `docs/excel_layout_clients.md`
+  - `docs/excel_layout_sales.md`
+  - `docs/excel_layout_settlement_format.md`
+- テーブル設計やマッピングロジックを検討するときも、
+  上記の `docs` を仕様として扱うこと。
+- テンプレート精算書のレイアウト仕様（どのセルに何を入れるか）も
+  `docs/excel_layout_settlement_format.md` に記載されている前提でコードを生成すること。

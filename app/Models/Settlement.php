@@ -81,11 +81,25 @@ class Settlement extends Model
      * 
      * Issue #17: 過去精算書履歴ダウンロード機能
      * 
+     * Storageのexists()とfile_exists()の両方でチェック
+     * （PHPSpreadsheetで直接保存したファイルにも対応）
+     * 
      * @return bool
      */
     public function hasExcelFile(): bool
     {
-        return $this->excel_path && Storage::disk('local')->exists($this->excel_path);
+        if (! $this->excel_path) {
+            return false;
+        }
+        
+        // Storageでチェック
+        if (Storage::disk('local')->exists($this->excel_path)) {
+            return true;
+        }
+        
+        // file_exists()でもチェック（PHPSpreadsheetで直接保存したファイル用）
+        $fullPath = storage_path('app/' . $this->excel_path);
+        return file_exists($fullPath);
     }
 
     /**
@@ -103,11 +117,24 @@ class Settlement extends Model
     /**
      * Excel ファイルの内容を取得
      * 
+     * Storageとfile_get_contents()の両方に対応
+     * 
      * @return string
      */
     public function getExcelContent(): string
     {
-        return Storage::disk('local')->get($this->excel_path);
+        // まずStorageで取得を試みる
+        if (Storage::disk('local')->exists($this->excel_path)) {
+            return Storage::disk('local')->get($this->excel_path);
+        }
+        
+        // file_get_contents()で取得（PHPSpreadsheetで直接保存したファイル用）
+        $fullPath = storage_path('app/' . $this->excel_path);
+        if (file_exists($fullPath)) {
+            return file_get_contents($fullPath);
+        }
+        
+        throw new \RuntimeException('Excelファイルが見つかりません: ' . $this->excel_path);
     }
 
     /**

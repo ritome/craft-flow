@@ -92,6 +92,57 @@ class SettlementRequest extends FormRequest
             'sales_file' => '売上データ',
         ];
     }
+
+    /**
+     * より詳細なバリデーション
+     * 
+     * @param  \Illuminate\Validation\Validator  $validator
+     * @return void
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            // 請求期間が未来日でないことを確認
+            $billingEndDate = $this->input('billing_end_date');
+            if ($billingEndDate && \Carbon\Carbon::parse($billingEndDate)->isFuture()) {
+                $validator->errors()->add(
+                    'billing_end_date',
+                    '請求終了日に未来の日付は指定できません。'
+                );
+            }
+
+            // 請求期間が3ヶ月以上でないことを確認（データ量制限）
+            $start = $this->input('billing_start_date');
+            $end = $this->input('billing_end_date');
+
+            if ($start && $end) {
+                $startDate = \Carbon\Carbon::parse($start);
+                $endDate = \Carbon\Carbon::parse($end);
+
+                if ($startDate->diffInMonths($endDate) > 3) {
+                    $validator->errors()->add(
+                        'billing_end_date',
+                        '請求期間は3ヶ月以内で指定してください。'
+                    );
+                }
+            }
+
+            // ファイルが実際にアップロードされているか確認
+            if ($this->hasFile('customer_file') && ! $this->file('customer_file')->isValid()) {
+                $validator->errors()->add(
+                    'customer_file',
+                    '顧客マスタファイルのアップロードに失敗しました。'
+                );
+            }
+
+            if ($this->hasFile('sales_file') && ! $this->file('sales_file')->isValid()) {
+                $validator->errors()->add(
+                    'sales_file',
+                    '売上データファイルのアップロードに失敗しました。'
+                );
+            }
+        });
+    }
 }
 
 

@@ -5,18 +5,24 @@ declare(strict_types=1);
 namespace App\Exports;
 
 use App\Models\Settlement;
-use Maatwebsite\Excel\Concerns\FromArray;
+use App\Services\Settlement\SettlementTemplateService;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
- * 精算書 Excel エクスポート
+ * 精算書 Excel エクスポート（テンプレートベース）
  * 
  * Issue #14: 月次委託精算書一括生成機能
  * 
+ * テンプレートファイルを読み込み、データを埋め込む方式に変更
  * 1委託先 = 1シート の構成
  */
 class SettlementExcelExport implements WithMultipleSheets
 {
+    /**
+     * テンプレートサービス
+     */
+    private SettlementTemplateService $templateService;
+    
     /**
      * コンストラクタ
      * 
@@ -26,7 +32,9 @@ class SettlementExcelExport implements WithMultipleSheets
     public function __construct(
         private readonly Settlement $settlement,
         private readonly array $settlementData
-    ) {}
+    ) {
+        $this->templateService = new SettlementTemplateService();
+    }
 
     /**
      * 複数シートを生成
@@ -43,12 +51,25 @@ class SettlementExcelExport implements WithMultipleSheets
             $data = $this->convertDetailsToArray();
         }
 
-        // サマリーシート
-        $sheets[] = new SettlementSummarySheet($this->settlement, $data);
+        \Log::info('Excel export sheets generation (template-based)', [
+            'settlement_id' => $this->settlement->id,
+            'data_count' => count($data),
+            'data_keys' => array_keys($data),
+        ]);
 
-        // 委託先ごとのシート
+        // データがない場合はエラー
+        if (empty($data)) {
+            \Log::error('No data available for Excel export');
+            throw new \Exception('精算データが見つかりません。データの生成に失敗した可能性があります。');
+        }
+
+        // 委託先ごとのシート（テンプレート方式）
         foreach ($data as $clientCode => $clientData) {
-            $sheets[] = new SettlementClientSheet($this->settlement, $clientData);
+            $sheets[] = new SettlementClientSheet(
+                $this->settlement,
+                $clientData,
+                $this->templateService
+            );
         }
 
         return $sheets;
@@ -87,103 +108,140 @@ class SettlementExcelExport implements WithMultipleSheets
 }
 
 /**
- * サマリーシート
+ * 委託先別シート（テンプレートベース）
+ * 
+ * テンプレートファイルを読み込み、データを埋め込む
  */
-class SettlementSummarySheet implements FromArray
+class SettlementClientSheet implements 
+    \Maatwebsite\Excel\Concerns\WithTitle,
+    \Maatwebsite\Excel\Concerns\FromCollection,
+    \Maatwebsite\Excel\Concerns\WithEvents
 {
+    /**
+     * コンストラクタ
+     */
     public function __construct(
         private readonly Settlement $settlement,
-        private readonly array $settlementData
+        private readonly array $clientData,
+        private readonly SettlementTemplateService $templateService
     ) {}
 
-    public function array(): array
+    /**
+     * コレクションを返す（空配列でOK、実際のデータはafterSheetで書き込む）
+     * 
+     * @return \Illuminate\Support\Collection
+     */
+    public function collection()
     {
-        $data = [];
+        // FromCollection を実装する必要があるが、
+        // 実際のデータ書き込みはafterSheetで行うため、ここでは空のコレクションを返す
+        return collect([]);
+    }
 
-        // ヘッダー
-        $data[] = ['委託精算書サマリー'];
-        $data[] = [];
-        $data[] = ['請求期間', $this->settlement->billing_start_date->format('Y年m月d日').' 〜 '.$this->settlement->billing_end_date->format('Y年m月d日')];
-        $data[] = ['委託先数', count($this->settlementData).'件'];
-        $data[] = ['総売上金額', '¥'.number_format((float) $this->settlement->total_sales_amount)];
-        $data[] = ['総手数料', '¥'.number_format((float) $this->settlement->total_commission)];
-        $data[] = ['総支払金額', '¥'.number_format((float) $this->settlement->total_payment_amount)];
-        $data[] = [];
+    /**
+     * シート作成後の処理
+     * 
+     * @return array
+     */
+    public function registerEvents(): array
+    {
+        return [
+            \Maatwebsite\Excel\Events\AfterSheet::class => function(\Maatwebsite\Excel\Events\AfterSheet $event) {
+                // テンプレートを読み込んでデータを書き込む
+                $this->fillTemplateToSheet($event->sheet);
+            },
+        ];
+    }
 
-        // 委託先一覧
-        $data[] = ['委託先コード', '委託先名', '売上金額', '手数料', '支払金額', '売上件数'];
-
-        foreach ($this->settlementData as $clientData) {
-            $data[] = [
-                $clientData['client_code'],
-                $clientData['client_name'],
-                (float) $clientData['sales_amount'],
-                (float) $clientData['commission_amount'],
-                (float) $clientData['payment_amount'],
-                $clientData['sales_count'],
-            ];
+    /**
+     * テンプレートをシートに適用
+     * 
+     * @param  \Maatwebsite\Excel\Sheet  $sheet
+     * @return void
+     */
+    private function fillTemplateToSheet($sheet): void
+    {
+        try {
+            // テンプレートを読み込む
+            $spreadsheet = $this->templateService->loadTemplate();
+            
+            // テンプレートにデータを書き込む
+            $this->templateService->fillTemplate(
+                $spreadsheet,
+                $this->settlement,
+                $this->clientData
+            );
+            
+            // テンプレートのワークシートを現在のシートにコピー
+            $templateSheet = $spreadsheet->getActiveSheet();
+            $this->copySheetContent($templateSheet, $sheet->getDelegate());
+            
+            \Log::info('Template applied to sheet', [
+                'client_code' => $this->clientData['client_code'] ?? 'unknown',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to apply template to sheet', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
+    }
+    
+    /**
+     * シートの内容をコピー
+     * 
+     * @param  \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet  $source
+     * @param  \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet  $target
+     * @return void
+     */
+    private function copySheetContent($source, $target): void
+    {
+        // すべてのセルをコピー
+        foreach ($source->getRowIterator() as $row) {
+            foreach ($row->getCellIterator() as $cell) {
+                $coordinate = $cell->getCoordinate();
+                
+                // セルの値をコピー
+                $target->setCellValue($coordinate, $cell->getValue());
+                
+                // スタイルをコピー
+                $target->duplicateStyle(
+                    $source->getStyle($coordinate),
+                    $coordinate
+                );
+            }
+        }
+        
+        // 列幅をコピー
+        foreach ($source->getColumnIterator() as $column) {
+            $columnIndex = $column->getColumnIndex();
+            $target->getColumnDimension($columnIndex)->setWidth(
+                $source->getColumnDimension($columnIndex)->getWidth()
+            );
+        }
+        
+        // 行の高さをコピー
+        foreach ($source->getRowIterator() as $row) {
+            $rowIndex = $row->getRowIndex();
+            $target->getRowDimension($rowIndex)->setRowHeight(
+                $source->getRowDimension($rowIndex)->getRowHeight()
+            );
+        }
+        
+        // セルの結合をコピー
+        foreach ($source->getMergeCells() as $mergeCell) {
+            $target->mergeCells($mergeCell);
+        }
+    }
 
-        return $data;
+    /**
+     * シート名を返す
+     * 
+     * @return string
+     */
+    public function title(): string
+    {
+        return mb_substr($this->clientData['client_name'], 0, 31);
     }
 }
-
-/**
- * 委託先別シート
- */
-class SettlementClientSheet implements FromArray
-{
-    public function __construct(
-        private readonly Settlement $settlement,
-        private readonly array $clientData
-    ) {}
-
-    public function array(): array
-    {
-        $data = [];
-
-        // ヘッダー
-        $data[] = ['委託精算書'];
-        $data[] = [];
-        $data[] = ['請求期間', $this->settlement->billing_start_date->format('Y年m月d日').' 〜 '.$this->settlement->billing_end_date->format('Y年m月d日')];
-        $data[] = [];
-
-        // 委託先情報
-        $data[] = ['委託先コード', $this->clientData['client_code']];
-        $data[] = ['委託先名', $this->clientData['client_name']];
-        $data[] = ['郵便番号', $this->clientData['postal_code']];
-        $data[] = ['住所', $this->clientData['address']];
-        $data[] = [];
-
-        // 銀行情報
-        $data[] = ['銀行名', $this->clientData['bank_name']];
-        $data[] = ['支店名', $this->clientData['branch_name']];
-        $data[] = ['口座種別', $this->clientData['account_type']];
-        $data[] = ['口座番号', $this->clientData['account_number']];
-        $data[] = ['口座名義', $this->clientData['account_name']];
-        $data[] = [];
-
-            // 精算情報
-            $data[] = ['売上金額', '¥'.number_format((float) $this->clientData['sales_amount'])];
-            $data[] = ['手数料', '¥'.number_format((float) $this->clientData['commission_amount'])];
-            $data[] = ['支払金額', '¥'.number_format((float) $this->clientData['payment_amount'])];
-            $data[] = [];
-
-        // 売上明細
-        $data[] = ['売上日', '商品名', '単価', '数量', '金額', '手数料率'];
-
-        foreach ($this->clientData['sales_details'] as $sale) {
-            $data[] = [
-                $sale['sale_date'] ?? '',
-                $sale['product_name'] ?? '',
-                $sale['unit_price'] ?? 0,
-                $sale['quantity'] ?? 0,
-                $sale['amount'] ?? 0,
-                $sale['commission_rate'] ?? 0,
-            ];
-        }
-
-        return $data;
-    }
-}
-
