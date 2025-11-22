@@ -9,6 +9,19 @@
 </head>
 
 <body class="bg-gray-50">
+    <div class="bg-white border-b border-gray-200 px-4 py-3 mb-6 shadow-sm">
+        <div class="max-w-7xl mx-auto">
+            <a href="{{ route('portal') }}"
+                class="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-bold transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-1">
+                    <path fill-rule="evenodd"
+                        d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z"
+                        clip-rule="evenodd" />
+                </svg>
+                社内業務システム（トップ）に戻る
+            </a>
+        </div>
+    </div>
     <!-- ナビゲーション -->
     <nav class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -87,8 +100,8 @@
                                 <p class="text-xs text-gray-500">Excel形式（XLSX, XLS）またはCSV（最大10MB）</p>
                                 <p class="mt-2 text-xs text-gray-400" id="fileName"></p>
                             </div>
-                            <input id="excel_file" name="excel_file" type="file"
-                                accept=".xlsx,.xls,.csv" class="hidden" />
+                            <input id="excel_file" name="excel_file" type="file" accept=".xlsx,.xls,.csv"
+                                class="hidden" />
                         </label>
                     </div>
 
@@ -153,6 +166,3 @@
 </body>
 
 </html>
-
-
-

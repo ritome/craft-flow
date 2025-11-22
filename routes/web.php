@@ -9,10 +9,8 @@ use App\Http\Controllers\Zengin\HistoryController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-// トップページは委託精算書へリダイレクト
-Route::get('/', function () {
-    return redirect()->route('settlements.index');
-});
+// ★★★ 変更点: トップページをポータル画面（メニュー画面）に設定 ★★★
+Volt::route('/', 'portal')->name('portal');
 
 // 全銀フォーマット変換機能のルート
 Route::prefix('zengin')->name('zengin.')->group(function () {
@@ -67,7 +65,6 @@ Volt::route('/reservations/{reservations}', 'reservations.show')->name('reservat
 Volt::route('/experience_programs/{experience_programs}/edit', 'experience_programs.edit')->name('experience_programs.edit');
 
 // 編集ページ
-
 Volt::route('/reservations/{reservation}/edit', 'reservations.edit')->name('reservations.edit');
 
 Route::prefix('reservations')->group(function () {
@@ -90,13 +87,6 @@ Route::get('/pdf/import', [PdfImportController::class, 'showUploadForm'])->name(
 Route::post('/pdf/import', [PdfImportController::class, 'import'])->name('pdf.import');
 Route::get('/pdf/history', [PdfImportController::class, 'showHistory'])->name('pdf.history');
 
-// // レジデータアップロード画面
-// Volt::route('/pos/upload', 'pos_data.upload')->name('pos.upload');
-// // レジデータ一覧
-// Volt::route('/pos', 'pos_data.index')->name('pos.index');
-// // レジデータ詳細
-// Volt::route('/pos/{id}', 'pos_data.show')->name('pos.show');
-
 // --- 体験プログラム管理 (Programs) ルーティング (Placeholder) ---
 Route::prefix('experience_programs')->group(function () {
     Volt::route('/delete', 'experience_programs.delete')->name('experience_programs.delete');
@@ -105,5 +95,8 @@ Route::prefix('experience_programs')->group(function () {
     Volt::route('/select', 'experience_programs.select')->name('experience_programs.select');
 });
 
-
+// 予約管理ダッシュボード
 Volt::route('/dashboard', 'dashboard')->name('dashboard');
+
+// 統計・分析ページ（先ほど作成したものがあれば追加）
+Volt::route('/statistics', 'statistics')->name('statistics');

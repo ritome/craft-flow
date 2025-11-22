@@ -11,7 +11,7 @@ title('予約システム');
 
         <!-- ページヘッダー -->
         <div class="text-center mb-10 md:mb-12">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 tracking-tight">管理ダッシュボード</h1>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 tracking-tight">予約管理ダッシュボード</h1>
             <p class="mt-3 text-base sm:text-lg text-gray-500">操作したい項目を選択してください。</p>
         </div>
 
