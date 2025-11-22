@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\ImportHistory;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -25,12 +27,12 @@ class PdfImportService
      * PDFファイルをインポートしてExcelを出力
      *
      * @param  array  $pdfFiles  アップロードされたPDFファイルパス配列
-     * @return string 出力されたExcelファイルパス
+     * @return array 出力されたExcelファイルパスと履歴ID ['excel_path' => string, 'history_id' => int]
      *
      * @throws InvalidArgumentException PDFファイルが存在しない、または読み取れない場合
      * @throws RuntimeException 処理中にエラーが発生した場合
      */
-    public function import(array $pdfFiles): string
+    public function import(array $pdfFiles): array
     {
         if (empty($pdfFiles)) {
             throw new InvalidArgumentException('PDFファイルが指定されていません');
@@ -106,7 +108,7 @@ class PdfImportService
             // 処理に成功したファイルが1つもない場合はエラー
             if (empty($normalizedDataList)) {
                 throw new RuntimeException(
-                    '処理可能なPDFファイルがありませんでした。' .
+                    '処理可能なPDFファイルがありませんでした。'.
                         'すべてのファイルでエラーが発生しました。'
                 );
             }
@@ -127,13 +129,27 @@ class PdfImportService
             // 5. Excelとして出力
             $excelPath = $this->excelExporter->export($aggregatedData);
 
+            // 6. 履歴を保存
+            $history = $this->saveHistory(
+                fileCount: count($pdfFiles),
+                successCount: $successCount,
+                failedCount: count($failedFiles),
+                excelPath: $excelPath,
+                fileDetails: $this->buildFileDetails($pdfFiles, $failedFiles),
+                totalSales: $aggregatedData['summary']['total_sales'] ?? $aggregatedData['total_sales'] ?? 0
+            );
+
             Log::info('PDFインポート処理完了', [
                 'excel_path' => $excelPath,
+                'history_id' => $history->id,
                 'success_count' => $successCount,
                 'failed_count' => count($failedFiles),
             ]);
 
-            return $excelPath;
+            return [
+                'excel_path' => $excelPath,
+                'history_id' => $history->id,
+            ];
         } catch (\Exception $e) {
             Log::error('PDFインポート処理失敗', [
                 'error' => $e->getMessage(),
@@ -142,5 +158,78 @@ class PdfImportService
 
             throw $e;
         }
+    }
+
+    /**
+     * 集計履歴を保存
+     *
+     * @param  int  $fileCount  アップロードファイル数
+     * @param  int  $successCount  処理成功ファイル数
+     * @param  int  $failedCount  処理失敗ファイル数
+     * @param  string  $excelPath  一時Excelファイルパス
+     * @param  array  $fileDetails  ファイル処理詳細
+     * @param  float  $totalSales  売上合計金額
+     */
+    private function saveHistory(
+        int $fileCount,
+        int $successCount,
+        int $failedCount,
+        string $excelPath,
+        array $fileDetails,
+        float $totalSales
+    ): ImportHistory {
+        // Excelファイルを永続ストレージに保存
+        $permanentPath = $this->moveExcelToPermanentStorage($excelPath);
+
+        return ImportHistory::create([
+            'import_date' => now(),
+            'file_count' => $fileCount,
+            'success_count' => $successCount,
+            'failed_count' => $failedCount,
+            'excel_path' => $permanentPath,
+            'file_details' => $fileDetails,
+            'total_sales' => $totalSales,
+        ]);
+    }
+
+    /**
+     * Excelファイルを永続ストレージに移動
+     *
+     * @param  string  $tempExcelPath  一時Excelファイルパス
+     * @return string 永続ストレージのパス
+     */
+    private function moveExcelToPermanentStorage(string $tempExcelPath): string
+    {
+        $fileName = basename($tempExcelPath);
+        $permanentPath = 'exports/'.date('Y/m/d').'/'.$fileName;
+
+        // ファイルをコピー
+        Storage::disk('local')->put(
+            $permanentPath,
+            file_get_contents($tempExcelPath)
+        );
+
+        Log::debug('Excelファイルを永続ストレージに保存', [
+            'temp_path' => $tempExcelPath,
+            'permanent_path' => $permanentPath,
+        ]);
+
+        return $permanentPath;
+    }
+
+    /**
+     * ファイル処理詳細を構築
+     *
+     * @param  array  $pdfFiles  アップロードされたPDFファイルパス配列
+     * @param  array  $failedFiles  失敗ファイル情報配列
+     * @return array ファイル処理詳細
+     */
+    private function buildFileDetails(array $pdfFiles, array $failedFiles): array
+    {
+        return [
+            'uploaded_files' => array_map(fn ($file) => basename($file), $pdfFiles),
+            'failed_files' => $failedFiles,
+            'processed_at' => now()->toIso8601String(),
+        ];
     }
 }

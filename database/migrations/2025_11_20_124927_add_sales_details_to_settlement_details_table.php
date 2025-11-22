@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * settlement_details テーブルに sales_details カラムを追加
- * 
+ *
  * 個別の売上明細データをJSON形式で保存
  */
 return new class extends Migration

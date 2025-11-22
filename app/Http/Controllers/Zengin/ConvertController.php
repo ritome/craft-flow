@@ -198,7 +198,7 @@ class ConvertController extends Controller
 
             // ファイル名生成: zengin_YYYYMMDD_HHMMSS.txt
             $outputFilename = str_replace('{Ymd_His}', date('Ymd_His'), config('zengin.filename_template'));
-            $storagePath = config('zengin.storage_path') . '/' . $outputFilename;
+            $storagePath = config('zengin.storage_path').'/'.$outputFilename;
 
             // storage/app/private/zengin/ に保存
             Storage::disk('local')->put($storagePath, $content);
@@ -220,16 +220,14 @@ class ConvertController extends Controller
                 echo $content;
             }, $outputFilename, [
                 'Content-Type' => 'text/plain; charset=shift_jis',
-                'Content-Disposition' => 'attachment; filename="' . $outputFilename . '"',
+                'Content-Disposition' => 'attachment; filename="'.$outputFilename.'"',
             ]);
         } catch (\Exception $e) {
-            \Log::error('Zengin conversion error: ' . $e->getMessage());
+            \Log::error('Zengin conversion error: '.$e->getMessage());
 
             return back()->withErrors([
-                'excel_file' => '変換中にエラーが発生しました: ' . $e->getMessage(),
+                'excel_file' => '変換中にエラーが発生しました: '.$e->getMessage(),
             ]);
         }
     }
 }
-
-

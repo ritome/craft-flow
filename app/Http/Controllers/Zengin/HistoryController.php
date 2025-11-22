@@ -64,6 +64,3 @@ class HistoryController extends Controller
         return back()->with('success', '履歴とファイルを削除しました。');
     }
 }
-
-
-

@@ -9,11 +9,11 @@ use App\Services\Parsers\PosAParser;
  */
 describe('PosAParser', function () {
     beforeEach(function () {
-        $this->parser = new PosAParser();
+        $this->parser = new PosAParser;
     });
 
     it('can parse valid レジA format', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 ========================================
 レジA 売上レポート
 日付: 2024/01/15
@@ -48,7 +48,7 @@ TEXT;
     });
 
     it('can parse date with different separators', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 レジA 売上レポート
 日付: 2024-03-25
 商品名             数量  単価   金額
@@ -62,7 +62,7 @@ TEXT;
     });
 
     it('can identify レジA format', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 レジA 売上レポート
 日付: 2024/01/15
 TEXT;
@@ -71,7 +71,7 @@ TEXT;
     });
 
     it('cannot identify non-レジA format', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 営業日: 2024-01-15
 TEXT;
@@ -80,7 +80,7 @@ TEXT;
     });
 
     it('throws exception when date is missing', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 レジA 売上レポート
 商品名             数量  単価   金額
 コーヒー            1    300    300
@@ -92,7 +92,7 @@ TEXT;
     });
 
     it('throws exception when items are missing', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 レジA 売上レポート
 日付: 2024/01/15
 合計                            0円
@@ -103,7 +103,7 @@ TEXT;
     });
 
     it('throws exception when total is missing', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 レジA 売上レポート
 日付: 2024/01/15
 商品名             数量  単価   金額
@@ -115,7 +115,7 @@ TEXT;
     });
 
     it('throws exception when calculated total does not match', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 レジA 売上レポート
 日付: 2024/01/15
 商品名             数量  単価   金額
@@ -128,7 +128,7 @@ TEXT;
     });
 
     it('can parse multiple items with various products', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 ========================================
 レジA 売上レポート
 日付: 2024/05/10

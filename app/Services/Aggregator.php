@@ -60,7 +60,7 @@ class Aggregator
             foreach ($data['items'] as $item) {
                 $code = $item['product_code'];
 
-                if (!isset($productMap[$code])) {
+                if (! isset($productMap[$code])) {
                     $productMap[$code] = [
                         'product_code' => $code,
                         'product_name' => $item['product_name'],

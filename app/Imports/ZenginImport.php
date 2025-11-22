@@ -15,13 +15,9 @@ class ZenginImport implements ToArray
      * Excelデータを配列として取得
      *
      * @param  array  $array  Excelの全データ
-     * @return array
      */
     public function array(array $array): array
     {
         return $array;
     }
 }
-
-
-

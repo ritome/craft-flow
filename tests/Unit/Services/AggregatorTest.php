@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Services\Aggregator;
 
 beforeEach(function () {
-    $this->aggregator = new Aggregator();
+    $this->aggregator = new Aggregator;
 });
 
 test('複数のデータを集計できる', function () {

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * 精算明細ファクトリー
- * 
+ *
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SettlementDetail>
  */
 class SettlementDetailFactory extends Factory
@@ -82,9 +82,6 @@ class SettlementDetailFactory extends Factory
 
     /**
      * 特定の委託先コードを持つ状態
-     * 
-     * @param  string  $clientCode
-     * @return static
      */
     public function forClient(string $clientCode): static
     {
@@ -95,8 +92,6 @@ class SettlementDetailFactory extends Factory
 
     /**
      * 売上金額が大きい状態
-     * 
-     * @return static
      */
     public function largeAmount(): static
     {
@@ -117,8 +112,6 @@ class SettlementDetailFactory extends Factory
 
     /**
      * 売上金額が小さい状態
-     * 
-     * @return static
      */
     public function smallAmount(): static
     {
@@ -137,4 +130,3 @@ class SettlementDetailFactory extends Factory
         });
     }
 }
-

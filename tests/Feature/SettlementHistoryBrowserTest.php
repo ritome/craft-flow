@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\Settlement;
-use App\Models\SettlementDetail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,7 +10,7 @@ uses(RefreshDatabase::class);
 
 /**
  * Issue #17: 過去精算書履歴ダウンロード機能のテスト
- * 
+ *
  * ブラウザ表示とダウンロード機能の動作確認
  */
 

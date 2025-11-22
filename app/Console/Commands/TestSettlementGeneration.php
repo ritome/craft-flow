@@ -10,7 +10,7 @@ use Illuminate\Http\UploadedFile;
 
 /**
  * 精算書生成テストコマンド
- * 
+ *
  * Issue #12: Excelアップロード機能のテスト
  */
 class TestSettlementGeneration extends Command
@@ -105,9 +105,9 @@ class TestSettlementGeneration extends Command
             $this->line("📋 精算ID: {$settlement->id}");
             $this->line("📅 請求期間: {$settlement->billing_period}");
             $this->line("🏢 委託先数: {$settlement->client_count}件");
-            $this->line("💰 総売上金額: ¥".number_format((float) $settlement->total_sales_amount));
-            $this->line("💳 総手数料: ¥".number_format((float) $settlement->total_commission));
-            $this->line("💵 総支払金額: ¥".number_format((float) $settlement->total_payment_amount));
+            $this->line('💰 総売上金額: ¥'.number_format((float) $settlement->total_sales_amount));
+            $this->line('💳 総手数料: ¥'.number_format((float) $settlement->total_commission));
+            $this->line('💵 総支払金額: ¥'.number_format((float) $settlement->total_payment_amount));
             $this->newLine();
 
             // ファイル確認
@@ -140,4 +140,3 @@ class TestSettlementGeneration extends Command
         }
     }
 }
-

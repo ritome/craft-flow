@@ -47,7 +47,7 @@ class ZenginExporterTest extends TestCase
         // 各行が120バイトであること（Shift-JIS変換後）
         foreach ($lines as $line) {
             $sjis = mb_convert_encoding($line, 'SJIS-win', 'UTF-8');
-            $this->assertEquals(120, strlen($sjis), "行のバイト長が120バイトではありません: ".strlen($sjis));
+            $this->assertEquals(120, strlen($sjis), '行のバイト長が120バイトではありません: '.strlen($sjis));
         }
 
         // 統計情報が正しいこと
@@ -198,6 +198,3 @@ class ZenginExporterTest extends TestCase
         $this->assertFalse($preview[0]['_has_error']);
     }
 }
-
-
-

@@ -6,7 +6,7 @@ namespace App\Support;
 
 /**
  * Excel列名マッピング定義
- * 
+ *
  * docs/excel_layout_*.md の仕様に基づき、
  * Excel上の日本語列名とシステム内部の英語カラム名をマッピング
  */
@@ -14,7 +14,7 @@ class ExcelColumnMapping
 {
     /**
      * 顧客マスタ（委託先マスタ）の列マッピング
-     * 
+     *
      * 参照: docs/excel_layout_clients.md
      */
     public const CUSTOMER_COLUMNS = [
@@ -38,7 +38,7 @@ class ExcelColumnMapping
 
     /**
      * 売上データの列マッピング
-     * 
+     *
      * 参照: docs/excel_layout_sales.md
      */
     public const SALES_COLUMNS = [
@@ -63,7 +63,7 @@ class ExcelColumnMapping
 
     /**
      * Excel列名を内部カラム名に変換
-     * 
+     *
      * @param  string  $excelColumnName  Excel上の列名
      * @param  array  $mapping  マッピング定義配列
      * @return string 内部カラム名（見つからない場合はそのまま返す）
@@ -72,19 +72,19 @@ class ExcelColumnMapping
     {
         // 前後の空白を削除
         $trimmed = trim($excelColumnName);
-        
+
         // マッピングに存在すれば変換
         if (isset($mapping[$trimmed])) {
             return $mapping[$trimmed];
         }
-        
+
         // 見つからない場合は元の名前をそのまま返す（後続処理でエラーになる）
         return $trimmed;
     }
 
     /**
      * 顧客マスタの必須列を取得
-     * 
+     *
      * @return array<string>
      */
     public static function getRequiredCustomerColumns(): array
@@ -97,7 +97,7 @@ class ExcelColumnMapping
 
     /**
      * 売上データの必須列を取得
-     * 
+     *
      * @return array<string>
      */
     public static function getRequiredSalesColumns(): array
@@ -114,7 +114,7 @@ class ExcelColumnMapping
 
     /**
      * 必須列が全て存在するかチェック
-     * 
+     *
      * @param  array<string>  $headers  実際のヘッダー配列
      * @param  array<string>  $required  必須列の配列
      * @return array<string> 不足している列名の配列
@@ -124,4 +124,3 @@ class ExcelColumnMapping
         return array_diff($required, $headers);
     }
 }
-

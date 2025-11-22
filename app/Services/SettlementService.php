@@ -494,7 +494,7 @@ class SettlementService
                 $storagePath = "settlements/{$zipFileName}";
                 $zipContent = file_get_contents($zipPath);
                 Storage::disk('local')->put($storagePath, $zipContent);
-                
+
                 // 元のZIPファイルを削除（Storageで管理されるようになったため）
                 @unlink($zipPath);
 
@@ -511,15 +511,15 @@ class SettlementService
                 $storagePath = "settlements/{$fileName}";
                 $excelContent = file_get_contents($excelFiles[0]);
                 Storage::disk('local')->put($storagePath, $excelContent);
-                
+
                 // 元のファイルを削除
                 @unlink($excelFiles[0]);
-                
+
                 \Log::info('Registered single Excel file to Storage', [
                     'file' => $fileName,
                     'storage_path' => $storagePath,
                 ]);
-                
+
                 return $storagePath;
             } else {
                 throw new \Exception('生成するExcelファイルがありません');

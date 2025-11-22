@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -48,8 +47,6 @@ class ExperienceProgramSeeder extends Seeder
 
         DB::table('experience_programs')->insert($programs);
 
-
-
         // Eloquentモデルを使用する場合の例（今回のコードではDBファサードを使用）
         /*
         foreach ($programs as $programData) {
@@ -57,6 +54,4 @@ class ExperienceProgramSeeder extends Seeder
         }
         */
     }
-
-    
 }

@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 /**
  * 精算書生成機能のテスト
- * 
+ *
  * Issue #12〜#17: 委託精算書一括発行システム
  */
 class SettlementGenerationTest extends TestCase
@@ -133,7 +133,7 @@ class SettlementGenerationTest extends TestCase
     /**
      * ファイルサイズが10MBを超える場合エラーになる
      */
-    public function test_ファイルサイズが10MBを超える場合エラーになる(): void
+    public function test_ファイルサイズが10_m_bを超える場合エラーになる(): void
     {
         $largeFile = UploadedFile::fake()->create('large.xlsx', 11000); // 11MB
 
@@ -177,7 +177,7 @@ class SettlementGenerationTest extends TestCase
     /**
      * Excelダウンロードが正常に動作する
      */
-    public function test_Excelダウンロードが正常に動作する(): void
+    public function test_excelダウンロードが正常に動作する(): void
     {
         // テストデータとファイルを作成
         $settlement = Settlement::factory()
@@ -197,7 +197,7 @@ class SettlementGenerationTest extends TestCase
     /**
      * PDFダウンロードが正常に動作する
      */
-    public function test_PDFダウンロードが正常に動作する(): void
+    public function test_pd_fダウンロードが正常に動作する(): void
     {
         // テストデータとファイルを作成
         $settlement = Settlement::factory()
@@ -305,10 +305,9 @@ class SettlementGenerationTest extends TestCase
         // 個別レコードとして保存されていることを確認
         $this->assertIsArray($details);
         $this->assertCount(3, $details);
-        
+
         // 同じ商品コード（P001）が2つ存在することを確認
         $p001Count = count(array_filter($details, fn ($d) => $d['product_code'] === 'P001'));
         $this->assertEquals(2, $p001Count);
     }
 }
-

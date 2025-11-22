@@ -3,14 +3,13 @@
 declare(strict_types=1);
 
 use App\Services\PdfReader;
-use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    $this->pdfReader = new PdfReader();
-    $this->testPdfPath = sys_get_temp_dir() . '/test_pdfs_' . uniqid();
-    
+    $this->pdfReader = new PdfReader;
+    $this->testPdfPath = sys_get_temp_dir().'/test_pdfs_'.uniqid();
+
     // テスト用ディレクトリを作成
-    if (!file_exists($this->testPdfPath)) {
+    if (! file_exists($this->testPdfPath)) {
         mkdir($this->testPdfPath, 0755, true);
     }
 });
@@ -24,7 +23,7 @@ afterEach(function () {
 });
 
 describe('PdfReader', function () {
-    
+
     it('正常なPDFファイルからテキストを抽出できる', function () {
         // テスト用の簡単なPDFを作成（実際のPDFが必要）
         // このテストは実際のPDFファイルがある場合にスキップしないようにマーク
@@ -32,7 +31,7 @@ describe('PdfReader', function () {
     });
 
     it('存在しないファイルパスを渡すと例外をスローする', function () {
-        expect(fn() => $this->pdfReader->extract('/path/to/nonexistent.pdf'))
+        expect(fn () => $this->pdfReader->extract('/path/to/nonexistent.pdf'))
             ->toThrow(InvalidArgumentException::class, 'PDFファイルが見つかりません');
     });
 
@@ -42,7 +41,7 @@ describe('PdfReader', function () {
         touch($unreadableFile);
         chmod($unreadableFile, 0000);
 
-        expect(fn() => $this->pdfReader->extract($unreadableFile))
+        expect(fn () => $this->pdfReader->extract($unreadableFile))
             ->toThrow(InvalidArgumentException::class, 'PDFファイルが読み取れません');
 
         // クリーンアップのために権限を戻す
@@ -53,7 +52,7 @@ describe('PdfReader', function () {
     });
 
     it('extractTextメソッドでも抽出できる（後方互換性）', function () {
-        expect(fn() => $this->pdfReader->extractText('/path/to/nonexistent.pdf'))
+        expect(fn () => $this->pdfReader->extractText('/path/to/nonexistent.pdf'))
             ->toThrow(InvalidArgumentException::class, 'PDFファイルが見つかりません');
     });
 
@@ -64,7 +63,7 @@ describe('PdfReader', function () {
 
         // 空のPDFの場合は例外をスローするはず
         // ただし、spatie/pdf-to-textがどう反応するかに依存
-        expect(fn() => $this->pdfReader->extract($emptyFile))
+        expect(fn () => $this->pdfReader->extract($emptyFile))
             ->toThrow(RuntimeException::class);
     });
 
@@ -73,8 +72,7 @@ describe('PdfReader', function () {
         $invalidPdf = "{$this->testPdfPath}/invalid.pdf";
         file_put_contents($invalidPdf, 'This is not a PDF file');
 
-        expect(fn() => $this->pdfReader->extract($invalidPdf))
+        expect(fn () => $this->pdfReader->extract($invalidPdf))
             ->toThrow(RuntimeException::class);
     });
 });
-

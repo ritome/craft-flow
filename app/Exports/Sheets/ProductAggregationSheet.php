@@ -5,22 +5,22 @@ declare(strict_types=1);
 namespace App\Exports\Sheets;
 
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Events\AfterSheet;
 
 /**
  * シート2: 商品別集計
  *
  * 商品ごとの販売数量・金額を集計
  */
-class ProductAggregationSheet implements FromArray, WithHeadings, WithTitle, WithStyles, WithColumnWidths, WithEvents
+class ProductAggregationSheet implements FromArray, WithColumnWidths, WithEvents, WithHeadings, WithStyles, WithTitle
 {
     public function __construct(
         private readonly array $aggregatedData
@@ -51,9 +51,9 @@ class ProductAggregationSheet implements FromArray, WithHeadings, WithTitle, Wit
             $data[] = [
                 $product['product_code'],
                 $product['product_name'],
-                '¥' . number_format($product['unit_price']),
+                '¥'.number_format($product['unit_price']),
                 $product['total_quantity'],
-                '¥' . number_format($product['total_sales']),
+                '¥'.number_format($product['total_sales']),
             ];
         }
 
@@ -64,7 +64,7 @@ class ProductAggregationSheet implements FromArray, WithHeadings, WithTitle, Wit
             '',
             '',
             $summary['total_quantity'] ?? 0,
-            '¥' . number_format($summary['total_sales'] ?? 0),
+            '¥'.number_format($summary['total_sales'] ?? 0),
         ];
 
         return $data;

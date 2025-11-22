@@ -10,9 +10,9 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * 精算書 Excel エクスポート（テンプレートベース）
- * 
+ *
  * Issue #14: 月次委託精算書一括生成機能
- * 
+ *
  * テンプレートファイルを読み込み、データを埋め込む方式に変更
  * 1委託先 = 1シート の構成
  */
@@ -22,24 +22,19 @@ class SettlementExcelExport implements WithMultipleSheets
      * テンプレートサービス
      */
     private SettlementTemplateService $templateService;
-    
+
     /**
      * コンストラクタ
-     * 
-     * @param  Settlement  $settlement
-     * @param  array  $settlementData
      */
     public function __construct(
         private readonly Settlement $settlement,
         private readonly array $settlementData
     ) {
-        $this->templateService = new SettlementTemplateService();
+        $this->templateService = new SettlementTemplateService;
     }
 
     /**
      * 複数シートを生成
-     * 
-     * @return array
      */
     public function sheets(): array
     {
@@ -77,13 +72,11 @@ class SettlementExcelExport implements WithMultipleSheets
 
     /**
      * SettlementDetail から配列形式に変換
-     * 
-     * @return array
      */
     private function convertDetailsToArray(): array
     {
         $data = [];
-        
+
         foreach ($this->settlement->details as $detail) {
             $data[$detail->client_code] = [
                 'client_code' => $detail->client_code,
@@ -109,13 +102,10 @@ class SettlementExcelExport implements WithMultipleSheets
 
 /**
  * 委託先別シート（テンプレートベース）
- * 
+ *
  * テンプレートファイルを読み込み、データを埋め込む
  */
-class SettlementClientSheet implements 
-    \Maatwebsite\Excel\Concerns\WithTitle,
-    \Maatwebsite\Excel\Concerns\FromCollection,
-    \Maatwebsite\Excel\Concerns\WithEvents
+class SettlementClientSheet implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithEvents, \Maatwebsite\Excel\Concerns\WithTitle
 {
     /**
      * コンストラクタ
@@ -128,7 +118,7 @@ class SettlementClientSheet implements
 
     /**
      * コレクションを返す（空配列でOK、実際のデータはafterSheetで書き込む）
-     * 
+     *
      * @return \Illuminate\Support\Collection
      */
     public function collection()
@@ -140,13 +130,11 @@ class SettlementClientSheet implements
 
     /**
      * シート作成後の処理
-     * 
-     * @return array
      */
     public function registerEvents(): array
     {
         return [
-            \Maatwebsite\Excel\Events\AfterSheet::class => function(\Maatwebsite\Excel\Events\AfterSheet $event) {
+            \Maatwebsite\Excel\Events\AfterSheet::class => function (\Maatwebsite\Excel\Events\AfterSheet $event) {
                 // テンプレートを読み込んでデータを書き込む
                 $this->fillTemplateToSheet($event->sheet);
             },
@@ -155,27 +143,26 @@ class SettlementClientSheet implements
 
     /**
      * テンプレートをシートに適用
-     * 
+     *
      * @param  \Maatwebsite\Excel\Sheet  $sheet
-     * @return void
      */
     private function fillTemplateToSheet($sheet): void
     {
         try {
             // テンプレートを読み込む
             $spreadsheet = $this->templateService->loadTemplate();
-            
+
             // テンプレートにデータを書き込む
             $this->templateService->fillTemplate(
                 $spreadsheet,
                 $this->settlement,
                 $this->clientData
             );
-            
+
             // テンプレートのワークシートを現在のシートにコピー
             $templateSheet = $spreadsheet->getActiveSheet();
             $this->copySheetContent($templateSheet, $sheet->getDelegate());
-            
+
             \Log::info('Template applied to sheet', [
                 'client_code' => $this->clientData['client_code'] ?? 'unknown',
             ]);
@@ -187,13 +174,12 @@ class SettlementClientSheet implements
             throw $e;
         }
     }
-    
+
     /**
      * シートの内容をコピー
-     * 
+     *
      * @param  \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet  $source
      * @param  \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet  $target
-     * @return void
      */
     private function copySheetContent($source, $target): void
     {
@@ -201,10 +187,10 @@ class SettlementClientSheet implements
         foreach ($source->getRowIterator() as $row) {
             foreach ($row->getCellIterator() as $cell) {
                 $coordinate = $cell->getCoordinate();
-                
+
                 // セルの値をコピー
                 $target->setCellValue($coordinate, $cell->getValue());
-                
+
                 // スタイルをコピー
                 $target->duplicateStyle(
                     $source->getStyle($coordinate),
@@ -212,7 +198,7 @@ class SettlementClientSheet implements
                 );
             }
         }
-        
+
         // 列幅をコピー
         foreach ($source->getColumnIterator() as $column) {
             $columnIndex = $column->getColumnIndex();
@@ -220,7 +206,7 @@ class SettlementClientSheet implements
                 $source->getColumnDimension($columnIndex)->getWidth()
             );
         }
-        
+
         // 行の高さをコピー
         foreach ($source->getRowIterator() as $row) {
             $rowIndex = $row->getRowIndex();
@@ -228,7 +214,7 @@ class SettlementClientSheet implements
                 $source->getRowDimension($rowIndex)->getRowHeight()
             );
         }
-        
+
         // セルの結合をコピー
         foreach ($source->getMergeCells() as $mergeCell) {
             $target->mergeCells($mergeCell);
@@ -237,8 +223,6 @@ class SettlementClientSheet implements
 
     /**
      * シート名を返す
-     * 
-     * @return string
      */
     public function title(): string
     {

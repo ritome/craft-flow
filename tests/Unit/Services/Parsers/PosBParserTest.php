@@ -9,11 +9,11 @@ use App\Services\Parsers\PosBParser;
  */
 describe('PosBParser', function () {
     beforeEach(function () {
-        $this->parser = new PosBParser();
+        $this->parser = new PosBParser;
     });
 
     it('can parse valid POS-B format', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 ========================================
 *** POS-B システム ***
 営業日: 2024-01-15
@@ -52,7 +52,7 @@ TEXT;
     });
 
     it('can parse format without comma in total', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 営業日: 2024-02-20
 [1] コーヒー x 1 = ¥300
@@ -66,7 +66,7 @@ TEXT;
     });
 
     it('can parse format without yen symbol', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 営業日: 2024-03-05
 [1] サンドイッチ x 2 = 800
@@ -80,7 +80,7 @@ TEXT;
     });
 
     it('can identify POS-B format', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 営業日: 2024-01-15
 TEXT;
@@ -89,7 +89,7 @@ TEXT;
     });
 
     it('cannot identify non-POS-B format', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 レジA 売上レポート
 日付: 2024/01/15
 TEXT;
@@ -98,7 +98,7 @@ TEXT;
     });
 
     it('throws exception when date is missing', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 [1] コーヒー x 1 = ¥300
 総計: ¥300
@@ -109,7 +109,7 @@ TEXT;
     });
 
     it('throws exception when items are missing', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 営業日: 2024-01-15
 総計: ¥0
@@ -120,7 +120,7 @@ TEXT;
     });
 
     it('throws exception when total is missing', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 営業日: 2024-01-15
 [1] コーヒー x 1 = ¥300
@@ -131,7 +131,7 @@ TEXT;
     });
 
     it('throws exception when calculated total does not match', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 営業日: 2024-01-15
 [1] コーヒー x 1 = ¥300
@@ -143,7 +143,7 @@ TEXT;
     });
 
     it('can parse date with slash separator', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 営業日: 2024/06/18
 [1] アイスティー x 1 = ¥350
@@ -156,7 +156,7 @@ TEXT;
     });
 
     it('can parse large amounts with commas', function () {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
 *** POS-B システム ***
 営業日: 2024-07-25
 [1] ディナーセット x 5 = ¥12,500

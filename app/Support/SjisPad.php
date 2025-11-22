@@ -61,6 +61,3 @@ class SjisPad
         return str_pad((string) $number, $length, '0', STR_PAD_LEFT);
     }
 }
-
-
-

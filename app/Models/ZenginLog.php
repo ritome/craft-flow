@@ -64,6 +64,3 @@ class ZenginLog extends Model
         return Storage::disk('local')->get($this->file_path);
     }
 }
-
-
-

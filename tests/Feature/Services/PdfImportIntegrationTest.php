@@ -56,9 +56,9 @@ TEXT,
     ];
 
     // 各サービスのインスタンス化
-    $parser = new PosAParser();
-    $normalizer = new Normalizer();
-    $aggregator = new Aggregator();
+    $parser = new PosAParser;
+    $normalizer = new Normalizer;
+    $aggregator = new Aggregator;
 
     // ステップ1: パース
     $parsedDataList = [];
@@ -145,8 +145,8 @@ TEXT,
 });
 
 test('異なる形式のデータが混在してもNormalizerで統一される', function () {
-    $normalizer = new Normalizer();
-    $aggregator = new Aggregator();
+    $normalizer = new Normalizer;
+    $aggregator = new Aggregator;
 
     // 異なる形式のパースデータ
     $parsedDataList = [

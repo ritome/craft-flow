@@ -91,6 +91,3 @@ class TextNormalizer
         return $str;
     }
 }
-
-
-

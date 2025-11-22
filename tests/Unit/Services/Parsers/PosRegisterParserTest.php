@@ -7,7 +7,7 @@ use InvalidArgumentException;
 
 describe('PosRegisterParser', function () {
     beforeEach(function () {
-        $this->parser = new PosRegisterParser();
+        $this->parser = new PosRegisterParser;
     });
 
     it('can parse returns true for valid format', function () {
@@ -192,4 +192,3 @@ P015 竹細工 茶托(5枚組) ¥3,800 0 ¥0 P030 岩手銘菓 かもめの玉�
 合計 ¥89,910
 TEXT;
 }
-

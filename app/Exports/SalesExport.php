@@ -35,4 +35,3 @@ class SalesExport implements WithMultipleSheets
         ];
     }
 }
-
