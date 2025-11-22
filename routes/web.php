@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\PdfImportController;
 declare(strict_types=1);
 
+use App\Http\Controllers\PdfImportController;
 use App\Http\Controllers\SettlementController;
 use App\Http\Controllers\Zengin\ConvertController;
 use App\Http\Controllers\Zengin\HistoryController;
