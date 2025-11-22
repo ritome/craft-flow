@@ -7,6 +7,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>集計履歴 - CraftFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <!-- Alpine.js for Livewire -->
+    @livewireStyles
 </head>
 
 <body class="bg-gray-50">
@@ -59,6 +63,9 @@
                     </div>
                 </div>
             @endif
+
+            <!-- 売上グラフ表示コンポーネント -->
+            @livewire('pdf.charts')
 
             <!-- 履歴テーブル -->
             @if ($histories->isEmpty())
@@ -218,6 +225,8 @@
     <div class="mt-12 text-center text-sm text-gray-500 pb-8">
         <p>CraftFlow - レジデータ自動集計システム v1.0.0</p>
     </div>
+
+    @livewireScripts
 </body>
 
 </html>
