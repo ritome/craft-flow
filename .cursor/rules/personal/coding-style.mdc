@@ -1,0 +1,16 @@
+# コーディングスタイル
+
+## PHP / Laravel
+- 型宣言は必ず付ける（return type / param type）
+- Laravel のコードスタイル（Laravel Pint）に準拠
+- Magic number を禁止し、定数化する
+- 使用しない import を残さない
+
+## SQL / Repository
+- QueryBuilder or Eloquent を使用
+- 生SQLは原則禁止（必要時のみ理由を書く）
+
+## テスト
+- Feature テストを優先
+- PDF パース部分はユニットテストも必須
+- Faker を使用して擬似レジデータを生成する

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PdfImportController;
 declare(strict_types=1);
 
 use App\Http\Controllers\SettlementController;
@@ -84,6 +85,17 @@ Route::prefix('reservations')->group(function () {
     Volt::route('/{reservationId}/delete', 'reservations.delete');
 });
 
+// PDFインポート
+Route::get('/pdf/import', [PdfImportController::class, 'showUploadForm'])->name('pdf.upload.form');
+Route::post('/pdf/import', [PdfImportController::class, 'import'])->name('pdf.import');
+Route::get('/pdf/history', [PdfImportController::class, 'showHistory'])->name('pdf.history');
+
+// // レジデータアップロード画面
+// Volt::route('/pos/upload', 'pos_data.upload')->name('pos.upload');
+// // レジデータ一覧
+// Volt::route('/pos', 'pos_data.index')->name('pos.index');
+// // レジデータ詳細
+// Volt::route('/pos/{id}', 'pos_data.show')->name('pos.show');
 
 // --- 体験プログラム管理 (Programs) ルーティング (Placeholder) ---
 Route::prefix('experience_programs')->group(function () {

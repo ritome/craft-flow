@@ -15,6 +15,7 @@
         "laravel/tinker": "^2.10.1",
         "livewire/volt": "^1.9",
         "maatwebsite/excel": "^3.1",
+        "spatie/pdf-to-text": "^1.54"
         "mpdf/mpdf": "^8.2"
     },
     "require-dev": {

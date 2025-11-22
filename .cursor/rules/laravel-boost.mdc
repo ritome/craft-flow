@@ -571,7 +571,6 @@ $pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
 | decoration-slice | box-decoration-slice |
 | decoration-clone | box-decoration-clone |
 
-
 === tests rules ===
 
 ## Test Enforcement
