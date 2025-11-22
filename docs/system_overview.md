@@ -1,8 +1,9 @@
 # システム概要設計書
 
 **プロジェクト名**: CraftFlow - レジデータ自動集計システム  
-**バージョン**: 1.0.0  
+**バージョン**: 1.1.0  
 **作成日**: 2025-11-15  
+**最終更新**: 2025-11-21  
 **対象**: Laravel 12 + MariaDB + Laravel Sail  
 
 ---
@@ -283,11 +284,17 @@
     ▼
 [ExcelExporter]
     │
-    │ 9. Excel生成
+    │ 9. Excel生成（SalesExport）
+    ▼
+[SummarySheet]          ─┐
+[ProductAggregationSheet] ├─ 10. 各シート生成
+[RegisterDetailSheet]    ─┘    (レイアウト・スタイル適用)
+    │
+    │ 11. Excelファイル統合
     ▼
 [ストレージ保存]
     │
-    │ 10. ダウンロード
+    │ 12. ダウンロード
     ▼
 [ユーザー]
 ```
@@ -304,7 +311,7 @@
 | 6 | PosRegisterParser | 正規表現でデータ抽出 | パースエラー |
 | 7 | Normalizer | データを統一フォーマットに変換 | データ不整合 |
 | 8 | Aggregator | レジ別・商品別に集計 | - |
-| 9 | ExcelExporter | Excel形式に変換 | ライブラリエラー |
+| 9 | ExcelExporter | Excel形式に変換（3シート構成） | ライブラリエラー |
 | 10 | Controller | HTTPレスポンスで返却 | - |
 
 ---
@@ -326,12 +333,19 @@ craft-flow/
 │   │   ├── ExcelExporter.php               # Excel出力
 │   │   └── Parsers/
 │   │       ├── ParserInterface.php         # パーサーインターフェース
-│   │       └── PosRegisterParser.php       # POSレジ用パーサー
+│   │       ├── PosRegisterParser.php       # POSレジ用パーサー（汎用）
+│   │       ├── PosAParser.php              # POSレジAタイプ用パーサー
+│   │       └── PosBParser.php              # POSレジBタイプ用パーサー
 │   ├── Models/
 │   │   ├── User.php                        # ユーザーモデル
 │   │   └── ImportHistory.php               # 集計履歴モデル
 │   └── Exports/
-│       └── SalesExport.php                 # Excelエクスポートクラス
+│       ├── SalesExport.php                 # Excelエクスポートクラス（メイン）
+│       ├── SalesDataExport.php             # Excelエクスポートクラス（旧）
+│       └── Sheets/
+│           ├── SummarySheet.php            # 集計サマリーシート
+│           ├── ProductAggregationSheet.php # 商品別集計シート
+│           └── RegisterDetailSheet.php     # レジ別詳細シート
 ├── database/
 │   ├── migrations/
 │   │   └── xxxx_create_import_histories_table.php
@@ -340,7 +354,9 @@ craft-flow/
 │   └── views/
 │       ├── welcome.blade.php               # トップページ
 │       ├── upload.blade.php                # アップロード画面
-│       └── history.blade.php               # 履歴画面
+│       ├── history.blade.php               # 履歴画面（実装済み）
+│       ├── livewire/                       # Livewire/Voltコンポーネント
+│       └── components/                     # 再利用可能コンポーネント
 ├── routes/
 │   └── web.php                             # Webルーティング
 ├── tests/
@@ -410,7 +426,13 @@ public function getParser(string $text): ParserInterface
 ```
 
 **対応パーサー**:
-- `PosRegisterParser`: POSレジ用パーサー（デフォルト）
+- `PosRegisterParser`: POSレジ用パーサー（汎用、デフォルト）
+- `PosAParser`: POSレジAタイプ用パーサー
+- `PosBParser`: POSレジBタイプ用パーサー
+
+**パーサー選択ロジック**:
+PDFから抽出したテキストパターンを解析し、適切なパーサーを自動選択します。
+特定のフォーマットに一致しない場合は、汎用的な `PosRegisterParser` が使用されます。
 
 ### 9.4 PosRegisterParser
 
@@ -476,9 +498,48 @@ public function export(array $aggregatedData): string
 ```
 
 **出力形式**:
-- シート1: 集計サマリー
-- シート2: レジ別詳細
-- シート3: 商品別詳細
+- シート1: 集計サマリー（SummarySheet）
+- シート2: 商品別集計（ProductAggregationSheet）
+- シート3: レジ別詳細（RegisterDetailSheet）
+
+**実装詳細**:
+`SalesExport` クラスが `WithMultipleSheets` インターフェースを実装し、以下の3つのシートクラスを統合：
+
+#### 9.7.1 SummarySheet（集計サマリーシート）
+- **責務**: レジ別の売上概要を表示
+- **機能**: 
+  - レジ番号の昇順ソート
+  - 処理日時、販売商品数、販売数量合計、売上金額を表示
+  - ヘッダー行スタイリング（背景色: 青系）
+  - 合計行スタイリング（背景色: 黄系）
+  - カラム幅の自動調整
+  - オートフィルタ機能
+
+#### 9.7.2 ProductAggregationSheet（商品別集計シート）
+- **責務**: 商品ごとの販売実績を集計
+- **機能**:
+  - 商品コード、商品名、単価、販売数量、売上金額を表示
+  - 商品名カラムの幅を広く設定（60単位）
+  - ヘッダー行スタイリング
+  - 合計行スタイリング
+  - オートフィルタ機能
+
+#### 9.7.3 RegisterDetailSheet（レジ別詳細シート）
+- **責務**: 各レジの取引明細を表示
+- **機能**:
+  - レジごとの商品明細表示
+  - レジ小計行の挿入
+  - 総合計行の表示
+  - 小計行と総合計行の異なるスタイリング
+  - オートフィルタ機能
+
+**使用インターフェース**（各シートクラス共通）:
+- `FromArray`: 配列データからシート生成
+- `WithHeadings`: ヘッダー行の定義
+- `WithTitle`: シートタイトルの設定
+- `WithStyles`: セルスタイルの適用
+- `WithColumnWidths`: カラム幅の設定
+- `WithEvents`: オートフィルタなどのイベント処理
 
 ### 9.8 ImportHistory Model
 
@@ -598,10 +659,11 @@ public function export(array $aggregatedData): string
 ### 12.1 フェーズ1（現在）: 基本機能実装
 
 - [x] PDFアップロード機能
-- [x] PDFパース機能
+- [x] PDFパース機能（複数パーサー対応）
 - [x] 集計処理
-- [x] Excel出力
-- [ ] 集計履歴保存
+- [x] Excel出力（3シート構成、スタイリング、フィルタ機能）
+- [x] 集計履歴画面（UI実装済み）
+- [ ] 集計履歴保存（バックエンド処理）
 
 ### 12.2 フェーズ2: 履歴管理機能
 
@@ -644,9 +706,33 @@ public function export(array $aggregatedData): string
 - **[PdfReader.md](./PdfReader.md)** - PdfReaderサービスの詳細仕様
 - **[pdf_format_specification.md](./pdf_format_specification.md)** - POSレジPDFフォーマット仕様書
 - **[parser_implementation_guide.md](./parser_implementation_guide.md)** - パーサー実装ガイド
-- **[excel_output_specification.md](./excel_output_specification.md)** - Excel出力仕様書
+- **[excel_output_specification.md](./excel_output_specification.md)** - Excel出力仕様書（3シート構成の詳細）
 
-### C. 開発環境セットアップ
+### C. Excelレイアウト仕様（実装済み機能）
+
+#### シート1: 集計サマリー（SummarySheet）
+- **レイアウト**: レジ番号 | 処理日時 | 販売商品数 | 販売数量合計 | 売上金額
+- **ソート**: レジ番号の昇順
+- **カラム幅**: A=15, B=45, C=20, D=25, E=20
+- **スタイル**: ヘッダー（青系背景）、合計行（黄系背景）
+- **機能**: オートフィルタ有効
+
+#### シート2: 商品別集計（ProductAggregationSheet）
+- **レイアウト**: 商品コード | 商品名 | 単価 | 販売数量 | 売上金額
+- **カラム幅**: A=15, B=60（商品名を広く設定）, C=12, D=12, E=15
+- **スタイル**: ヘッダー（青系背景）、合計行（黄系背景）
+- **機能**: オートフィルタ有効
+
+#### シート3: レジ別詳細（RegisterDetailSheet）
+- **レイアウト**: レジ番号 | 商品コード | 商品名 | 単価 | 数量 | 小計
+- **カラム幅**: A=15, B=20, C=60（商品名を広く設定）, D=12, E=12, F=15
+- **スタイル**: 
+  - ヘッダー（青系背景）
+  - レジ小計行（薄い黄系背景）
+  - 総合計行（黄系背景）
+- **機能**: オートフィルタ有効
+
+### D. 開発環境セットアップ
 
 ```bash
 # リポジトリをクローン
@@ -676,7 +762,7 @@ cp .env.example .env
 ./vendor/bin/sail artisan test
 ```
 
-### D. トラブルシューティング
+### E. トラブルシューティング
 
 #### PDF処理でエラーが発生する
 - `pdftotext` がインストールされているか確認
@@ -698,6 +784,7 @@ cp .env.example .env
 | 日付 | バージョン | 変更内容 | 作成者 |
 |------|-----------|---------|-------|
 | 2025-11-15 | 1.0.0 | 初版作成 | - |
+| 2025-11-21 | 1.1.0 | 実装済み項目を追記（Sheets、Parser、Excelレイアウト仕様） | - |
 
 ---
 

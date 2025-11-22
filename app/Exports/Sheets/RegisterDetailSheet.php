@@ -50,8 +50,14 @@ class RegisterDetailSheet implements FromArray, WithHeadings, WithTitle, WithSty
         $data = [];
         $currentRow = 2; // ヘッダー行の次から
 
+        // レジ別のデータ行(レジ番号の昇順にソート)
+        $registers = $this->aggregatedData['registers'] ?? [];
+        usort($registers, function ($a, $b) {
+            return $a['register_id'] <=> $b['register_id'];
+        });
+
         // レジ別にデータを出力
-        foreach ($this->aggregatedData['registers'] ?? [] as $register) {
+        foreach ($registers as $register) {
             // 各レジの商品明細
             foreach ($register['items'] as $item) {
                 $data[] = [
