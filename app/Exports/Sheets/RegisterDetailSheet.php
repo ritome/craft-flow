@@ -5,22 +5,22 @@ declare(strict_types=1);
 namespace App\Exports\Sheets;
 
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Events\AfterSheet;
 
 /**
  * シート3: レジ別詳細
  *
  * 各レジの詳細データを表示
  */
-class RegisterDetailSheet implements FromArray, WithHeadings, WithTitle, WithStyles, WithColumnWidths, WithEvents
+class RegisterDetailSheet implements FromArray, WithColumnWidths, WithEvents, WithHeadings, WithStyles, WithTitle
 {
     private array $subtotalRows = [];
 
@@ -64,21 +64,21 @@ class RegisterDetailSheet implements FromArray, WithHeadings, WithTitle, WithSty
                     $register['register_id'],
                     $item['product_code'],
                     $item['product_name'],
-                    '¥' . number_format($item['unit_price']),
+                    '¥'.number_format($item['unit_price']),
                     $item['quantity'],
-                    '¥' . number_format($item['subtotal']),
+                    '¥'.number_format($item['subtotal']),
                 ];
                 $currentRow++;
             }
 
             // レジ小計行
             $data[] = [
-                $register['register_id'] . ' 小計',
+                $register['register_id'].' 小計',
                 '',
                 '',
                 '',
                 $register['quantity_total'],
-                '¥' . number_format($register['sales_total']),
+                '¥'.number_format($register['sales_total']),
             ];
             $this->subtotalRows[] = $currentRow;
             $currentRow++;
@@ -92,7 +92,7 @@ class RegisterDetailSheet implements FromArray, WithHeadings, WithTitle, WithSty
             '',
             '',
             $summary['total_quantity'] ?? 0,
-            '¥' . number_format($summary['total_sales'] ?? 0),
+            '¥'.number_format($summary['total_sales'] ?? 0),
         ];
         $this->subtotalRows[] = $currentRow;
 

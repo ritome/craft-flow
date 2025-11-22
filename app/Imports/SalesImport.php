@@ -8,9 +8,9 @@ use Maatwebsite\Excel\Concerns\ToArray;
 
 /**
  * 売上データインポート
- * 
+ *
  * Issue #12: 精算用Excelデータアップロード機能
- * 
+ *
  * 必要な列：
  * - sale_date: 売上日
  * - client_code: 委託先コード
@@ -24,15 +24,9 @@ class SalesImport implements ToArray
 {
     /**
      * Excel データを配列として取得
-     *
-     * @param  array  $array
-     * @return array
      */
     public function array(array $array): array
     {
         return $array;
     }
 }
-
-
-

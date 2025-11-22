@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * 精算書生成リクエストバリデーション
- * 
+ *
  * Issue #12: 精算用Excelデータアップロード機能
  */
 class SettlementRequest extends FormRequest
@@ -95,9 +95,8 @@ class SettlementRequest extends FormRequest
 
     /**
      * より詳細なバリデーション
-     * 
+     *
      * @param  \Illuminate\Validation\Validator  $validator
-     * @return void
      */
     public function withValidator($validator): void
     {
@@ -144,6 +143,3 @@ class SettlementRequest extends FormRequest
         });
     }
 }
-
-
-

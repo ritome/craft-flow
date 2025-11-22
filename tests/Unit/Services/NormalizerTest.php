@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Services\Normalizer;
 
 beforeEach(function () {
-    $this->normalizer = new Normalizer();
+    $this->normalizer = new Normalizer;
 });
 
 test('正常なデータを正規化できる', function () {

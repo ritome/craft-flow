@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * 委託精算明細モデル
- * 
+ *
  * Issue #13: 委託先別精算データ自動変換機能
- * 
+ *
  * @property int $id
  * @property int $settlement_id
  * @property string $client_code 委託先コード
@@ -77,14 +77,9 @@ class SettlementDetail extends Model
 
     /**
      * 精算履歴とのリレーション
-     * 
-     * @return BelongsTo
      */
     public function settlement(): BelongsTo
     {
         return $this->belongsTo(Settlement::class);
     }
 }
-
-
-

@@ -34,6 +34,3 @@ return new class extends Migration
         Schema::dropIfExists('zengin_logs');
     }
 };
-
-
-

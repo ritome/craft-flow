@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * 委託精算書履歴モデル
- * 
+ *
  * Issue #16: 精算書発行履歴保存機能
- * 
+ *
  * @property int $id
  * @property string $billing_start_date 請求開始日
  * @property string $billing_end_date 請求終了日
@@ -68,8 +68,6 @@ class Settlement extends Model
 
     /**
      * 精算明細とのリレーション
-     * 
-     * @return HasMany
      */
     public function details(): HasMany
     {
@@ -78,36 +76,33 @@ class Settlement extends Model
 
     /**
      * Excel ファイルが存在するかチェック
-     * 
+     *
      * Issue #17: 過去精算書履歴ダウンロード機能
-     * 
+     *
      * Storageのexists()とfile_exists()の両方でチェック
      * （PHPSpreadsheetで直接保存したファイルにも対応）
-     * 
-     * @return bool
      */
     public function hasExcelFile(): bool
     {
         if (! $this->excel_path) {
             return false;
         }
-        
+
         // Storageでチェック
         if (Storage::disk('local')->exists($this->excel_path)) {
             return true;
         }
-        
+
         // file_exists()でもチェック（PHPSpreadsheetで直接保存したファイル用）
-        $fullPath = storage_path('app/' . $this->excel_path);
+        $fullPath = storage_path('app/'.$this->excel_path);
+
         return file_exists($fullPath);
     }
 
     /**
      * PDF ファイルが存在するかチェック
-     * 
+     *
      * Issue #17: 過去精算書履歴ダウンロード機能
-     * 
-     * @return bool
      */
     public function hasPdfFile(): bool
     {
@@ -116,10 +111,8 @@ class Settlement extends Model
 
     /**
      * Excel ファイルの内容を取得
-     * 
+     *
      * Storageとfile_get_contents()の両方に対応
-     * 
-     * @return string
      */
     public function getExcelContent(): string
     {
@@ -127,20 +120,18 @@ class Settlement extends Model
         if (Storage::disk('local')->exists($this->excel_path)) {
             return Storage::disk('local')->get($this->excel_path);
         }
-        
+
         // file_get_contents()で取得（PHPSpreadsheetで直接保存したファイル用）
-        $fullPath = storage_path('app/' . $this->excel_path);
+        $fullPath = storage_path('app/'.$this->excel_path);
         if (file_exists($fullPath)) {
             return file_get_contents($fullPath);
         }
-        
-        throw new \RuntimeException('Excelファイルが見つかりません: ' . $this->excel_path);
+
+        throw new \RuntimeException('Excelファイルが見つかりません: '.$this->excel_path);
     }
 
     /**
      * PDF ファイルの内容を取得
-     * 
-     * @return string
      */
     public function getPdfContent(): string
     {
@@ -149,8 +140,6 @@ class Settlement extends Model
 
     /**
      * 請求期間の表示用文字列を取得
-     * 
-     * @return string
      */
     public function getBillingPeriodAttribute(): string
     {
@@ -159,6 +148,3 @@ class Settlement extends Model
             .$this->billing_end_date->format('Y年m月d日');
     }
 }
-
-
-

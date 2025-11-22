@@ -13,8 +13,6 @@ class PdfImportRequest extends FormRequest
 {
     /**
      * リクエストの認可
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -53,4 +51,3 @@ class PdfImportRequest extends FormRequest
         ];
     }
 }
-

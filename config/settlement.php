@@ -44,4 +44,3 @@ return [
     */
     'settlement_number_format' => 'Y-m-\CH000',  // 2025-10-C001 形式
 ];
-

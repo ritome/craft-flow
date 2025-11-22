@@ -6,16 +6,16 @@ namespace App\DataTransferObjects;
 
 /**
  * 委託先別精算データDTO
- * 
+ *
  * Issue #13: 委託先別精算データ自動変換機能
- * 
+ *
  * 計算済みの精算データを保持し、Excel/PDF生成に使用する
  */
 class SettlementClientData
 {
     /**
      * コンストラクタ
-     * 
+     *
      * @param  string  $clientCode  委託先コード
      * @param  string  $clientName  委託先名
      * @param  string|null  $postalCode  郵便番号
@@ -50,9 +50,6 @@ class SettlementClientData
 
     /**
      * 配列から DTO を生成
-     * 
-     * @param  array  $data
-     * @return self
      */
     public static function fromArray(array $data): self
     {
@@ -76,8 +73,6 @@ class SettlementClientData
 
     /**
      * DTO を配列に変換
-     * 
-     * @return array
      */
     public function toArray(): array
     {
@@ -101,10 +96,6 @@ class SettlementClientData
 
     /**
      * 精算書の表示用期間文字列を取得
-     * 
-     * @param  \Carbon\Carbon  $startDate
-     * @param  \Carbon\Carbon  $endDate
-     * @return string
      */
     public static function formatBillingPeriod(\Carbon\Carbon $startDate, \Carbon\Carbon $endDate): string
     {
@@ -113,8 +104,6 @@ class SettlementClientData
 
     /**
      * 郵便番号をフォーマット（〒マークを付与）
-     * 
-     * @return string
      */
     public function getFormattedPostalCode(): string
     {
@@ -132,8 +121,6 @@ class SettlementClientData
 
     /**
      * 委託先の完全な住所を取得
-     * 
-     * @return string
      */
     public function getFullAddress(): string
     {
@@ -147,8 +134,6 @@ class SettlementClientData
 
     /**
      * 振込先情報の完全な文字列を取得
-     * 
-     * @return string
      */
     public function getFullBankInfo(): string
     {
@@ -162,4 +147,3 @@ class SettlementClientData
         return implode('  ', $parts);
     }
 }
-

@@ -5,22 +5,22 @@ declare(strict_types=1);
 namespace App\Exports\Sheets;
 
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Events\AfterSheet;
 
 /**
  * シート1: 集計サマリー
  *
  * 全体の売上概要とレジ別の小計を表示
  */
-class SummarySheet implements FromArray, WithHeadings, WithTitle, WithStyles, WithColumnWidths, WithEvents
+class SummarySheet implements FromArray, WithColumnWidths, WithEvents, WithHeadings, WithStyles, WithTitle
 {
     public function __construct(
         private readonly array $aggregatedData
@@ -58,7 +58,7 @@ class SummarySheet implements FromArray, WithHeadings, WithTitle, WithStyles, Wi
                 $register['output_datetime'],
                 $register['product_count'],
                 $register['quantity_total'],
-                '¥' . number_format($register['sales_total']),
+                '¥'.number_format($register['sales_total']),
             ];
         }
 
@@ -69,7 +69,7 @@ class SummarySheet implements FromArray, WithHeadings, WithTitle, WithStyles, Wi
             '',
             '', // 販売商品数の合計は意味がないため空欄
             $summary['total_quantity'] ?? 0,
-            '¥' . number_format($summary['total_sales'] ?? 0),
+            '¥'.number_format($summary['total_sales'] ?? 0),
         ];
 
         return $data;

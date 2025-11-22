@@ -60,7 +60,7 @@ class ZenginExporter
         }
 
         // CRLF で連結し、末尾にも改行を付加
-        $content = implode(config('zengin.newline'), $lines) . config('zengin.newline');
+        $content = implode(config('zengin.newline'), $lines).config('zengin.newline');
 
         return $content;
     }
@@ -116,16 +116,16 @@ class ZenginExporter
 
         // 1行を結合
         $line = $dataType
-            . $bankCodePadded
-            . $bankNamePadded
-            . $branchCodePadded
-            . $branchNamePadded
-            . $dummy1
-            . $accountTypeCode
-            . $accountNumberPadded
-            . $recipientNamePadded
-            . $amountPadded
-            . $dummy2;
+            .$bankCodePadded
+            .$bankNamePadded
+            .$branchCodePadded
+            .$branchNamePadded
+            .$dummy1
+            .$accountTypeCode
+            .$accountNumberPadded
+            .$recipientNamePadded
+            .$amountPadded
+            .$dummy2;
 
         // 120バイトチェック
         $lineLength = strlen($line);

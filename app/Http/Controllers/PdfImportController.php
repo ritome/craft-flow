@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PdfImportRequest;
+use App\Models\ImportHistory;
 use App\Services\PdfImportService;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Illuminate\Http\UploadedFile;
 
 /**
  * PDFインポート機能のコントローラー
@@ -26,8 +24,6 @@ class PdfImportController extends Controller
 
     /**
      * アップロードフォームを表示
-     *
-     * @return View
      */
     public function showUploadForm(): View
     {
@@ -37,9 +33,6 @@ class PdfImportController extends Controller
 
     /**
      * PDFファイルをインポート
-     *
-     * @param PdfImportRequest $request
-     * @return BinaryFileResponse|\Illuminate\Http\RedirectResponse
      */
     public function import(PdfImportRequest $request): BinaryFileResponse|\Illuminate\Http\RedirectResponse
     {
@@ -64,7 +57,7 @@ class PdfImportController extends Controller
                 // 日本語ファイル名の問題を回避するため、英数字のみのファイル名を生成
                 $originalName = $file->getClientOriginalName();
                 $extension = $file->getClientOriginalExtension();
-                $safeFileName = uniqid('pdf_') . '.' . $extension;
+                $safeFileName = uniqid('pdf_').'.'.$extension;
 
                 // Storage::putFileAsを使用してファイルを保存
                 $tempPath = Storage::disk('local')->putFileAs(
@@ -82,7 +75,7 @@ class PdfImportController extends Controller
                 $fullPath = Storage::disk('local')->path($tempPath);
 
                 // ファイルが実際に存在するか確認
-                if (!File::exists($fullPath)) {
+                if (! File::exists($fullPath)) {
                     throw new \RuntimeException("保存されたファイルが見つかりません: {$fullPath}");
                 }
 
@@ -106,17 +99,25 @@ class PdfImportController extends Controller
             ]);
 
             // PDFインポート処理実行
-            $excelPath = $this->pdfImportService->import($pdfPaths);
+            $result = $this->pdfImportService->import($pdfPaths);
+            $excelPath = $result['excel_path'];
+            $historyId = $result['history_id'];
 
             // 一時ファイルの削除
             $this->cleanupTempFiles($pdfPaths);
 
+            Log::info('集計履歴を保存しました', [
+                'history_id' => $historyId,
+                'excel_path' => $excelPath,
+            ]);
+
             // Excelファイルをダウンロードレスポンスとして返す
+            // 履歴用にファイルを残すため、deleteFileAfterSendをfalseに変更
             return response()->download(
                 $excelPath,
                 basename($excelPath),
                 ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
-            )->deleteFileAfterSend(true);
+            )->deleteFileAfterSend(false);
         } catch (\InvalidArgumentException $e) {
             Log::warning('PDFインポート処理でバリデーションエラー', [
                 'error' => $e->getMessage(),
@@ -149,20 +150,53 @@ class PdfImportController extends Controller
 
     /**
      * インポート履歴を表示
-     *
-     * @return View
      */
     public function showHistory(): View
     {
-        // TODO: 実装
-        return view('history');
+        $histories = ImportHistory::orderBy('import_date', 'desc')
+            ->paginate(20);
+
+        return view('history', compact('histories'));
+    }
+
+    /**
+     * 過去の集計結果を再ダウンロード
+     */
+    public function download(ImportHistory $history): BinaryFileResponse
+    {
+        if (! $history->excelFileExists()) {
+            abort(404, 'ファイルが見つかりません。');
+        }
+
+        $filePath = $history->getExcelFullPath();
+        $fileName = '売上集計_'.$history->import_date->format('Ymd_His').'.xlsx';
+
+        return response()->download(
+            $filePath,
+            $fileName,
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+        );
+    }
+
+    /**
+     * 履歴を削除（ファイルも削除）
+     */
+    public function destroy(ImportHistory $history): \Illuminate\Http\RedirectResponse
+    {
+        // Excelファイルを削除
+        if ($history->excelFileExists()) {
+            Storage::disk('local')->delete($history->excel_path);
+        }
+
+        // 履歴レコードを削除
+        $history->delete();
+
+        return redirect()->route('pdf.history')
+            ->with('success', '履歴を削除しました。');
     }
 
     /**
      * 一時ファイルをクリーンアップ
-     *
-     * @param array $filePaths
-     * @return void
      */
     private function cleanupTempFiles(array $filePaths): void
     {

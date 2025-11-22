@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * 精算履歴ファクトリー
- * 
+ *
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Settlement>
  */
 class SettlementFactory extends Factory
@@ -51,9 +51,6 @@ class SettlementFactory extends Factory
 
     /**
      * 精算番号を生成
-     * 
-     * @param  \DateTime  $billingStartDate
-     * @return string
      */
     private function generateSettlementNumber(\DateTime $billingStartDate): string
     {
@@ -68,8 +65,6 @@ class SettlementFactory extends Factory
 
     /**
      * Excelファイルが存在する状態
-     * 
-     * @return static
      */
     public function withExcelFile(): static
     {
@@ -80,8 +75,6 @@ class SettlementFactory extends Factory
 
     /**
      * PDFファイルが存在する状態
-     * 
-     * @return static
      */
     public function withPdfFile(): static
     {
@@ -92,8 +85,6 @@ class SettlementFactory extends Factory
 
     /**
      * Excel/PDF両方のファイルが存在する状態
-     * 
-     * @return static
      */
     public function withBothFiles(): static
     {

@@ -13,9 +13,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * 委託精算書コントローラ
- * 
+ *
  * Issue #12〜#17: 委託精算書一括発行システム
- * 
+ *
  * コントローラは薄く保ち、ビジネスロジックは SettlementService に委譲
  */
 class SettlementController extends Controller
@@ -29,10 +29,8 @@ class SettlementController extends Controller
 
     /**
      * 精算トップ画面（アップロード画面）
-     * 
+     *
      * Issue #12: 精算用Excelデータアップロード機能
-     * 
-     * @return View
      */
     public function index(): View
     {
@@ -41,16 +39,13 @@ class SettlementController extends Controller
 
     /**
      * 精算書生成処理
-     * 
+     *
      * Issue #12〜#16 統合処理：
      * - #12: Excel アップロード
      * - #13: 委託先別精算データ自動変換
      * - #14: 精算書一括生成（Excel/PDF）
      * - #15: ファイルダウンロード
      * - #16: 履歴保存
-     * 
-     * @param  SettlementRequest  $request
-     * @return RedirectResponse
      */
     public function generate(SettlementRequest $request): RedirectResponse
     {
@@ -86,10 +81,8 @@ class SettlementController extends Controller
 
     /**
      * 精算履歴一覧画面
-     * 
+     *
      * Issue #17: 過去精算書履歴ダウンロード機能
-     * 
-     * @return View
      */
     public function history(): View
     {
@@ -112,29 +105,26 @@ class SettlementController extends Controller
 
     /**
      * Excel ファイルダウンロード
-     * 
+     *
      * Issue #17: 過去精算書履歴ダウンロード機能
-     * 
+     *
      * ZIPファイルまたは単一Excelファイルに対応
-     * 
-     * @param  Settlement  $settlement
-     * @return StreamedResponse|RedirectResponse
      */
     public function downloadExcel(Settlement $settlement): StreamedResponse|RedirectResponse
     {
         // リレーションをロード
         $settlement->load('details');
-        
+
         if (! $settlement->hasExcelFile()) {
             return back()->withErrors(['download_error' => 'Excel ファイルが見つかりません。']);
         }
 
         $content = $settlement->getExcelContent();
-        
+
         // ファイルの拡張子を取得（.zip or .xlsx）
         $extension = pathinfo($settlement->excel_path, PATHINFO_EXTENSION);
         $dateStr = $settlement->billing_start_date->format('Ymd').'-'.$settlement->billing_end_date->format('Ymd');
-        
+
         // ZIPファイルか単一Excelファイルかで拡張子とMIMEタイプを変更
         if ($extension === 'zip') {
             $filename = "settlement_{$dateStr}.zip";
@@ -153,17 +143,14 @@ class SettlementController extends Controller
 
     /**
      * PDF ファイルダウンロード
-     * 
+     *
      * Issue #17: 過去精算書履歴ダウンロード機能
-     * 
-     * @param  Settlement  $settlement
-     * @return StreamedResponse|RedirectResponse
      */
     public function downloadPdf(Settlement $settlement): StreamedResponse|RedirectResponse
     {
         // リレーションをロード
         $settlement->load('details');
-        
+
         if (! $settlement->hasPdfFile()) {
             return back()->withErrors(['download_error' => 'PDF ファイルが見つかりません。']);
         }
@@ -180,9 +167,6 @@ class SettlementController extends Controller
 
     /**
      * 精算履歴削除
-     * 
-     * @param  Settlement  $settlement
-     * @return RedirectResponse
      */
     public function destroy(Settlement $settlement): RedirectResponse
     {
@@ -197,6 +181,3 @@ class SettlementController extends Controller
         }
     }
 }
-
-
-

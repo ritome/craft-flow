@@ -16,14 +16,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 開発環境用のテストユーザーを作成
-User::firstOrCreate(
+        User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
                 'name' => 'Test User',
                 'password' => bcrypt('password'), // 任意のパスワードを設定
             ]
         );
-        
+
         // --- データの呼び出し順序を保証 ---
         // 外部キー制約エラーを避けるため、参照されるテーブル(プログラム)を先に実行します。
         $this->call([

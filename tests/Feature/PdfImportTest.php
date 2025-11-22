@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\PdfImportController;
 use App\Services\Aggregator;
 use App\Services\ExcelExporter;
 use App\Services\Normalizer;
@@ -17,10 +16,10 @@ beforeEach(function () {
     Storage::fake('local');
 
     // テスト用のPDFディレクトリを作成
-    if (!File::exists(storage_path('app/pdf_temp'))) {
+    if (! File::exists(storage_path('app/pdf_temp'))) {
         File::makeDirectory(storage_path('app/pdf_temp'), 0755, true);
     }
-    if (!File::exists(storage_path('app/exports'))) {
+    if (! File::exists(storage_path('app/exports'))) {
         File::makeDirectory(storage_path('app/exports'), 0755, true);
     }
 });
@@ -84,10 +83,10 @@ TEXT;
         ->andReturn($pdfContent2);
 
     // サービスをセットアップ
-    $parserFactory = new ParserFactory();
-    $normalizer = new Normalizer();
-    $aggregator = new Aggregator();
-    $excelExporter = new ExcelExporter();
+    $parserFactory = new ParserFactory;
+    $normalizer = new Normalizer;
+    $aggregator = new Aggregator;
+    $excelExporter = new ExcelExporter;
 
     $pdfImportService = new PdfImportService(
         $mockPdfReader,
@@ -255,10 +254,10 @@ TEXT,
     // サービスを実行
     $pdfImportService = new PdfImportService(
         $mockPdfReader,
-        new ParserFactory(),
-        new Normalizer(),
-        new Aggregator(),
-        new ExcelExporter()
+        new ParserFactory,
+        new Normalizer,
+        new Aggregator,
+        new ExcelExporter
     );
 
     $excelPath = $pdfImportService->import($pdfPaths);

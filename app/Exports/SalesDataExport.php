@@ -16,13 +16,10 @@ class SalesDataExport implements WithMultipleSheets
 {
     public function __construct(
         private readonly array $aggregatedData
-    ) {
-    }
+    ) {}
 
     /**
      * 複数シートを返す
-     *
-     * @return array
      */
     public function sheets(): array
     {
@@ -41,8 +38,7 @@ class SummarySheet implements FromArray, WithHeadings, WithTitle
 {
     public function __construct(
         private readonly array $aggregatedData
-    ) {
-    }
+    ) {}
 
     public function title(): string
     {
@@ -81,8 +77,7 @@ class ItemsSheet implements FromArray, WithHeadings, WithTitle
 {
     public function __construct(
         private readonly array $aggregatedData
-    ) {
-    }
+    ) {}
 
     public function title(): string
     {
@@ -127,8 +122,7 @@ class DailySalesSheet implements FromArray, WithHeadings, WithTitle
 {
     public function __construct(
         private readonly array $aggregatedData
-    ) {
-    }
+    ) {}
 
     public function title(): string
     {
@@ -159,4 +153,3 @@ class DailySalesSheet implements FromArray, WithHeadings, WithTitle
         }, $dailySales);
     }
 }
-

@@ -86,6 +86,8 @@ Route::prefix('reservations')->group(function () {
 Route::get('/pdf/import', [PdfImportController::class, 'showUploadForm'])->name('pdf.upload.form');
 Route::post('/pdf/import', [PdfImportController::class, 'import'])->name('pdf.import');
 Route::get('/pdf/history', [PdfImportController::class, 'showHistory'])->name('pdf.history');
+Route::get('/pdf/download/{history}', [PdfImportController::class, 'download'])->name('pdf.download');
+Route::delete('/pdf/history/{history}', [PdfImportController::class, 'destroy'])->name('pdf.destroy');
 
 // --- 体験プログラム管理 (Programs) ルーティング (Placeholder) ---
 Route::prefix('experience_programs')->group(function () {

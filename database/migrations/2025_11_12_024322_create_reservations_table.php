@@ -62,6 +62,7 @@ return new class extends Migration
             // $table->integer('delete_flg')->default(0)->comment('論理削除フラグ (0: 有効, 1: 削除)'); // (代替案)
         });
     }
+
     /**
      * Reverse the migrations.
      */
